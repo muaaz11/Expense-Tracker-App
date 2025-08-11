@@ -5,6 +5,8 @@ import Typo from '@/components/Typo'
 import { colors, spacingX, spacingY } from '@/constant/style'
 import { verticalScale } from '@/utils/stying'
 import Button from '@/components/Button'
+import Animated, { FadeIn, FadeInDown, FadeInLeft } from 'react-native-reanimated'
+import { router } from 'expo-router'
 
 export default function Welcome() {
     return (
@@ -12,13 +14,14 @@ export default function Welcome() {
             <View style={styles.container}>
 
                 <View>
-                    <TouchableOpacity style={styles.loginButton}>
+                    <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/Login')}>
                         <Typo fontWeight={'500'}>
                             Sign in
                         </Typo>
                     </TouchableOpacity>
 
-                    <Image
+                    <Animated.Image
+                        entering={FadeIn.duration(1000)}
                         source={require('../assets/images/welcom2.png')}
                         style={styles.welcomImage}
                         resizeMode='contain'
@@ -27,27 +30,31 @@ export default function Welcome() {
                 </View>
 
                 <View style={styles.footer}>
-                    <View style={{alignItems: 'center'}}>
+                    <Animated.View
+                     entering={FadeInLeft.duration(1500).springify()}
+                    style={{ alignItems: 'center' }}>
                         <Typo size={30} fontWeight={'800'}>
                             Always take control
                         </Typo>
                         <Typo size={30} fontWeight={'800'}>
                             of your finances
                         </Typo>
-                    </View>
+                    </Animated.View>
 
-                    <View style={{ alignItems: 'center', gap: 2  }}>
+                    <Animated.View 
+                    entering={FadeInDown.duration(1500).delay(500).springify()}
+                    style={{ alignItems: 'center', gap: 2 }}>
                         <Typo size={17} color={colors.textLighter}>
                             Finance must be arranged to set a better
                         </Typo>
                         <Typo size={17} color={colors.textLighter}>
                             lifestyle in future
                         </Typo>
-                    </View>
+                    </Animated.View>
 
                     <View style={styles.bottonContiiner}>
-                        <Button>
-                            <Typo size={22} color={colors.neutral900} fontWeight={'600'}>
+                        <Button onPress={() => router.push('/Register')}>
+                            <Typo size={20} color={colors.neutral900} fontWeight={'600'}>
                                 Get Started
                             </Typo>
                         </Button>
@@ -93,7 +100,7 @@ const styles = StyleSheet.create({
 
     bottonContiiner: {
         width: '100%',
-        paddingHorizontal: spacingX._25
+        paddingHorizontal: spacingX._40
     },
 
 })

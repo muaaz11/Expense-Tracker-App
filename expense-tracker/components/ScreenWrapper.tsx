@@ -6,8 +6,7 @@ import { colors } from '@/constant/style'
 const { height } = Dimensions.get('window')
 
 const ScreenWrapper = ({ style, children }: ScreenWrapperProps) => {
-
-  let paddingTop = Platform.OS == 'ios' ? height * 0.5 : 50
+  let paddingTop = Platform.OS == 'ios' ? height * 0.5 : 20
 
   return (
     <View style={[style, {
