@@ -2,6 +2,7 @@ import { ActivityIndicator, ActivityIndicatorProps, StyleSheet, Text, View } fro
 import React from 'react'
 import { colors } from '@/constant/style'
 
+
 const Loading = ({
     size = "large",
     color = colors.primary

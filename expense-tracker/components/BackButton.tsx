@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
         borderRadius: radius._12,
         borderCurve: 'continuous',
         padding: 3,
-        marginHorizontal: spacingX._20,
-        marginVertical: spacingY._5
+        // marginVertical: spacingY._5
     }
 })
