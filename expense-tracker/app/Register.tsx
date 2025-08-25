@@ -136,7 +136,7 @@ const Register = () => {
           />
 
           <Button onPress={handlSubmit} loading={isLoading}>
-            <Typo size={20} color={colors.black} fontWeight={"500"}>Login</Typo>
+            <Typo size={20} color={colors.black} fontWeight={"500"}>Register</Typo>
           </Button>
         </View>
 
