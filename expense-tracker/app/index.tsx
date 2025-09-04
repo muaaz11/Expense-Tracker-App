@@ -5,18 +5,20 @@ import { Text, View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { AppContext } from "@/context/store";
 
 export default function Index() {
-  const { userId } = useContext(AppContext);
+  const { user_Id } = useContext(AppContext);
   const [isNavigated, setIsNavigated] = useState(true);
 
   const NavigationBasedOnContext = () => {
-    if (userId) {
+    if (user_Id) {
       const timeoutId = setTimeout(() => {
-        router.navigate("/Landing");
+        console.log("User found");
+        router.navigate("/(tabs)/Home");
       }, 500);
       setIsNavigated(false);
       return () => clearTimeout(timeoutId);
     } else {
       const timeoutId = setTimeout(() => {
+        console.log("User not found");
         router.navigate("/Login");
       }, 500);
       setIsNavigated(false);
@@ -29,7 +31,7 @@ export default function Index() {
       setIsNavigated(true);
     }
     NavigationBasedOnContext();
-  }, [userId]);
+  }, [user_Id]);
 
   return (
     <View style={styles.container}>
