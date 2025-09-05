@@ -7,14 +7,12 @@ import { scale, verticalScale } from "@/utils/stying";
 import TransactionList from "@/components/TransactionList";
 import AddTransactionBtn from "@/components/AddTransactionBtn";
 import { colors } from "@/constant/style";
+import TransactionModal from "@/components/Modal/TransactionModal";
+import ExpenseForm from "@/components/ExpenseForm";
+import Modal from "react-native-modal";
 
 const Home = () => {
-  const [open, setOpen] = useState(false);
-
-  const openModal = () => {
-    if (open) {
-    }
-  };
+  const [isModalVisible, setModalVisible] = useState(false);
   return (
     <ScreenWrapper>
       <View
@@ -46,7 +44,21 @@ const Home = () => {
         </View>
 
         <View style={{ position: "absolute", top: "90%", right: "6%" }}>
-          <AddTransactionBtn open={open} />
+          <AddTransactionBtn onPress={() => setModalVisible(true)} />
+        </View>
+
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Modal isVisible={isModalVisible}>
+            <ExpenseForm close={() => setModalVisible(false)} />
+          </Modal>
+          {/* <TransactionModal
+            visible={isModalVisible}
+            input
+            onRequestClose={() => setModalVisible(false)}
+          >
+          </TransactionModal> */}
         </View>
       </View>
     </ScreenWrapper>

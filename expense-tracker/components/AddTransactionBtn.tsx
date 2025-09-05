@@ -10,7 +10,11 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { verticalScale } from "@/utils/stying";
 import { colors, radius } from "@/constant/style";
 
-const AddTransactionBtn = ({ open }) => {
+type AddTransactionBtn = {
+  onPress: () => void;
+};
+
+const AddTransactionBtn: React.FC<AddTransactionBtn> = ({ onPress }) => {
   return (
     <TouchableOpacity
       style={{
@@ -18,6 +22,7 @@ const AddTransactionBtn = ({ open }) => {
         backgroundColor: colors.primary,
         borderRadius: "100%",
       }}
+      onPress={onPress}
     >
       <FontAwesome6 name="plus" size={25} color={colors.neutral700} />
     </TouchableOpacity>
