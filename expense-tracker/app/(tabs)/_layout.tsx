@@ -8,6 +8,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useState } from "react";
 import { colors } from "@/constant/style";
+import Toast from "react-native-toast-message";
 
 export default function TabsLayout() {
   const [selected, setSelected] = useState(true);
@@ -101,6 +102,7 @@ export default function TabsLayout() {
           />
         </Tabs>
       </View>
+      <Toast />
     </AppProvider>
   );
 }

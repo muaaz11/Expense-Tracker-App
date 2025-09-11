@@ -12,6 +12,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState("");
   const [authtoken, setAuthToken] = useState("");
   const [user_Id, setUserId] = useState("");
+  const [transactions, setTransactions] = useState([]);
   const userRef = useRef(null);
 
   useEffect(() => {
@@ -47,44 +48,44 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (!user_Id) {
+      // setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        const token = await AsyncStorage.getItem("TOKEN");
-        const userId = await AsyncStorage.getItem("userId");
-
-        if (!token || !userId) {
-          Toast.show({
-            type: "error",
-            text1: "invalid",
-            text2: "Failed to fetch token and userid from database",
-            visibilityTime: 1000,
-          });
-          return;
-        }
         const response = await fetch(
-          `http://192.168.100.7:4000/getUser/${userId}`,
+          `http://192.168.100.7:4000/getTransactions/${user_Id}`,
           {
+            method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
         const result = await response.json();
-        console.log("result fetchng", result);
-        setUser(result.data);
-        console.log("result.data", result.data);
+        console.log(result);
+        console.log(result.transaction);
+
+        if (result.success === true) {
+          setTransactions(result.transaction);
+          await AsyncStorage.setItem(
+            "transactions",
+            JSON.stringify(result.transaction)
+          );
+          // setIsFetcher(true);
+        } else {
+          console.log("Error fetching transactions:", result.message);
+        }
       } catch (error) {
-        Toast.show({
-          type: "error",
-          text1: "Failed",
-          text2: "Internal Server Error",
-        });
+        console.error("Error fetching transactions:", err);
       }
     };
 
     fetchData();
-  }, []);
+  }, [user_Id]);
 
   return (
     <AppContext.Provider
@@ -94,6 +95,8 @@ export const AppProvider = ({ children }) => {
         user_Id,
         userRef,
         user,
+        transactions,
+        setTransactions,
       }}
     >
       {children}

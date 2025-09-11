@@ -13,14 +13,14 @@ export default function Index() {
       const timeoutId = setTimeout(() => {
         console.log("User found");
         router.navigate("/(tabs)/Home");
-      }, 500);
+      }, 2000);
       setIsNavigated(false);
       return () => clearTimeout(timeoutId);
     } else {
       const timeoutId = setTimeout(() => {
         console.log("User not found");
         router.navigate("/Login");
-      }, 500);
+      }, 2000);
       setIsNavigated(false);
       return () => clearTimeout(timeoutId);
     }

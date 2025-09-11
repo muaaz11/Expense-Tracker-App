@@ -24,6 +24,7 @@ import { AppContext } from "@/context/store";
 
 type MyJwtPayload = {
   id: string;
+
   // add other properties if needed
 };
 
@@ -68,7 +69,7 @@ const Login = () => {
       }
 
       await AsyncStorage.setItem("TOKEN", result.token);
-      await AsyncStorage.setItem("userId", result.id);
+      await AsyncStorage.setItem("userId", result.id.toString());
       setAuthToken(result.token);
       const decodeToken = jwtDecode<MyJwtPayload>(result.token);
       const storedUserToken = decodeToken?.id;

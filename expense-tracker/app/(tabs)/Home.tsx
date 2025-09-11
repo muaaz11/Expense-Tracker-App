@@ -1,4 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 import Typo from "@/components/Typo";
 import BalanceCard from "@/components/BalanceCard";
@@ -10,6 +16,8 @@ import { colors } from "@/constant/style";
 import TransactionModal from "@/components/Modal/TransactionModal";
 import ExpenseForm from "@/components/ExpenseForm";
 import Modal from "react-native-modal";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Toast from "react-native-toast-message";
 
 const Home = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -50,15 +58,11 @@ const Home = () => {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Modal isVisible={isModalVisible}>
-            <ExpenseForm close={() => setModalVisible(false)} />
-          </Modal>
-          {/* <TransactionModal
-            visible={isModalVisible}
-            input
-            onRequestClose={() => setModalVisible(false)}
-          >
-          </TransactionModal> */}
+          <TransactionModal isVisible={isModalVisible} avoidKeyboard={false}>
+            <Input></Input>
+            {/* <ExpenseForm close={() => setModalVisible(false)} /> */}
+            <Toast topOffset={20} />
+          </TransactionModal>
         </View>
       </View>
     </ScreenWrapper>
