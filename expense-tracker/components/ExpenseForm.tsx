@@ -51,7 +51,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
     type: "Expense",
     amount: 0,
     description: "",
-    category: "",
+    category_name: "",
     date: new Date(),
   });
   const [showDate, setShowDate] = useState(false);
@@ -77,10 +77,10 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           },
           body: JSON.stringify({
             type: transaction.type,
-            category: transaction.category,
             amount: transaction.amount,
-            description: transaction.description,
-            date: transaction.date.toLocaleDateString(), // sirf date
+            description: transaction.description || null,
+            date: transaction.date.toISOString().slice(0, 10),
+            category_name: transaction.category_name,
           }),
         }
       );
@@ -99,7 +99,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           type: "Expense",
           amount: 0,
           description: "",
-          category: "",
+          category_name: "",
           date: new Date(),
         });
       } else {
@@ -274,11 +274,11 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
                 maxHeight={200}
                 labelField="label"
                 valueField="value"
-                value={transaction.category}
+                value={transaction.category_name}
                 onChange={(item) => {
                   setTransaction({
                     ...transaction,
-                    category: item.value,
+                    category_name: item.value,
                   });
                 }}
 

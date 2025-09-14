@@ -1,12 +1,15 @@
 import { StyleSheet, Text, View, Image } from "react-native";
-import React from "react";
+import React, { useContext } from "react";
 import Typo from "./Typo";
+import { AppContext } from "@/context/store";
 
 const DashbaordHeader = () => {
+  const { user_id } = useContext(AppContext);
+
   return (
     <View>
       <Typo size={15}>Hello</Typo>
-      <Typo size={15}>Name{}</Typo>
+      <Typo size={15}>Name</Typo>
     </View>
   );
 };

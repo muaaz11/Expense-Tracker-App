@@ -1,50 +1,77 @@
-import { useEffect, useId, useRef } from "react";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createContext } from "react";
-import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt, { jwtDecode } from "jwt-decode";
 
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // const [userId, setUserId] = useState("")
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState([]);
   const [authtoken, setAuthToken] = useState("");
   const [user_Id, setUserId] = useState("");
   const [transactions, setTransactions] = useState([]);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
   const userRef = useRef(null);
 
   useEffect(() => {
-    const Authentication = async () => {
+    const checkAuth = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("TOKEN");
+        if (!storedToken) return;
 
-        if (storedToken) {
-          setAuthToken(storedToken);
+        setAuthToken(storedToken);
 
-          try {
-            const decoded = jwtDecode(storedToken); // decode only if token exists
-            const UserIdFromToken = decoded?.id;
+        try {
+          const decoded = jwtDecode(storedToken);
+          const userIdFromToken = decoded?.id;
 
-            if (UserIdFromToken) {
-              setUserId(UserIdFromToken);
-              userRef.current = UserIdFromToken;
-            } else {
-              console.log("No user found in token");
-            }
-          } catch (decodeError) {
-            console.log("Token decoding failed:", decodeError);
+          if (userIdFromToken) {
+            setUserId(userIdFromToken);
+            userRef.current = userIdFromToken;
+          } else {
+            await AsyncStorage.removeItem("TOKEN");
           }
-        } else {
-          console.log("No token found in storage");
+        } catch (err) {
+          console.log("Invalid token:", err);
+          await AsyncStorage.removeItem("TOKEN");
         }
       } catch (error) {
         console.log("Error retrieving token:", error);
       }
     };
 
-    Authentication();
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserDetail = async () => {
+      try {
+        const response = await fetch(
+          `http://192.168.100.7:4000/getUser/${user_Id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const result = await response.json();
+        console.log(result);
+
+        if (result.success) {
+          setUser(result.data);
+        } else {
+          console.log("Failed to fetch userData");
+        }
+      } catch (error) {
+        console.log("Error in fetcing data from Database");
+      }
+    };
+
+    fetchUserDetail();
   }, []);
 
   useEffect(() => {
@@ -66,8 +93,6 @@ export const AppProvider = ({ children }) => {
         );
 
         const result = await response.json();
-        console.log(result);
-        console.log(result.transaction);
 
         if (result.success === true) {
           setTransactions(result.transaction);
@@ -75,7 +100,6 @@ export const AppProvider = ({ children }) => {
             "transactions",
             JSON.stringify(result.transaction)
           );
-          // setIsFetcher(true);
         } else {
           console.log("Error fetching transactions:", result.message);
         }
@@ -85,6 +109,30 @@ export const AppProvider = ({ children }) => {
     };
 
     fetchData();
+  }, [user_Id]);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const response = await fetch(
+        `http://192.168.100.7:4000/balance/${user_Id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTotalBalance(Number(result.total_balance));
+        setTotalIncome(Number(result.total_income));
+        setTotalExpense(Number(result.total_expense));
+      }
+    };
+
+    fetchBalance();
   }, [user_Id]);
 
   return (
@@ -97,6 +145,9 @@ export const AppProvider = ({ children }) => {
         user,
         transactions,
         setTransactions,
+        totalBalance,
+        totalIncome,
+        totalExpense,
       }}
     >
       {children}

@@ -9,10 +9,6 @@ const TransactionList = () => {
   const { setTransactions, transactions } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    console.log("transactions:", transactions);
-  }, []);
-
   return (
     <FlatList
       data={transactions}
@@ -37,7 +33,7 @@ const TransactionList = () => {
 
             <View style={{ flexDirection: "column", gap: verticalScale(5) }}>
               <Text style={{ fontSize: scale(20), color: colors.neutral200 }}>
-                {item.category}
+                {item.category_name ? `${item.category_name}` : "Income"}
               </Text>
               <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
                 {item.description}
@@ -51,7 +47,7 @@ const TransactionList = () => {
               ${item.amount}
             </Text>
             <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
-              {item.date}
+              {item.date.split("T")[0]}
             </Text>
           </View>
         </Pressable>

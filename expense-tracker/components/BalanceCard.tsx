@@ -5,12 +5,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import Typo from "./Typo";
 import { scale, verticalScale } from "@/utils/stying";
 import { colors } from "@/constant/style";
-
+import { AppContext } from "@/context/store";
+import AntDesign from "@expo/vector-icons/AntDesign";
 const BalanceCard = () => {
+  const { totalBalance, totalIncome, totalExpense } = useContext(AppContext);
+
   return (
     <View style={styles.container}>
       <View>
@@ -19,7 +22,7 @@ const BalanceCard = () => {
         </Typo>
 
         <Typo size={25} fontWeight={"600"} style={styles.balance}>
-          $2156.00
+          {totalBalance !== undefined ? `${totalBalance}.00` : `$0.00`}
         </Typo>
       </View>
 
@@ -27,13 +30,17 @@ const BalanceCard = () => {
         <View>
           {/* icon */}
           <Typo style={styles.income}>Income</Typo>
-          <Typo style={styles.incomBal}>$8000.00</Typo>
+          <Typo style={styles.incomBal}>
+            {totalIncome !== undefined ? `${totalIncome}.00` : "0.00"}
+          </Typo>
         </View>
 
         <View>
           {/* icon */}
           <Typo style={styles.expense}>Expense</Typo>
-          <Typo style={styles.expenseBal}>$4500.00</Typo>
+          <Typo style={styles.expenseBal}>
+            {totalExpense !== undefined ? `${totalExpense}.00` : "0.00"}
+          </Typo>
         </View>
       </View>
     </View>

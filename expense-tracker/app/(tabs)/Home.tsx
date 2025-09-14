@@ -4,8 +4,9 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Typo from "@/components/Typo";
 import BalanceCard from "@/components/BalanceCard";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -18,9 +19,11 @@ import ExpenseForm from "@/components/ExpenseForm";
 import Modal from "react-native-modal";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Toast from "react-native-toast-message";
+import { AppContext } from "@/context/store";
 
 const Home = () => {
   const [isModalVisible, setModalVisible] = useState(false);
+  const { user } = useContext(AppContext);
   return (
     <ScreenWrapper>
       <View
@@ -35,7 +38,7 @@ const Home = () => {
             Hello
           </Typo>
           <Typo size={25} fontWeight={"600"}>
-            Maaz Memon
+            {user?.name || "hello"}
           </Typo>
         </View>
 
@@ -43,13 +46,13 @@ const Home = () => {
           <BalanceCard />
         </View>
 
-        <View>
+        <ScrollView>
           <Typo fontWeight={500} size={scale(16)} color={colors.neutral350}>
             Recent Transactions
           </Typo>
 
           <TransactionList />
-        </View>
+        </ScrollView>
 
         <View style={{ position: "absolute", top: "90%", right: "6%" }}>
           <AddTransactionBtn onPress={() => setModalVisible(true)} />
@@ -58,11 +61,11 @@ const Home = () => {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <TransactionModal isVisible={isModalVisible} avoidKeyboard={false}>
-            <Input></Input>
-            {/* <ExpenseForm close={() => setModalVisible(false)} /> */}
+          <Modal isVisible={isModalVisible} avoidKeyboard={false}>
+            {/* <Input></Input> */}
+            <ExpenseForm close={() => setModalVisible(false)} />
             <Toast topOffset={20} />
-          </TransactionModal>
+          </Modal>
         </View>
       </View>
     </ScreenWrapper>

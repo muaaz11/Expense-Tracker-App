@@ -6,9 +6,10 @@ const getUser = async (req, res) => {
   console.log("📢 [BACKEND] getUser API hit with ID:", id);
 
   try {
-    const userDetails = await pool.query("SELECT * from users WHERE id = $1", [
-      id,
-    ]);
+    const userDetails = await pool.query(
+      "SELECT id, name, email from users WHERE id = $1",
+      [id]
+    );
 
     if (userDetails.rowCount === 0) {
       return res.status(404).json({ message: "No user found" });
@@ -24,7 +25,7 @@ const getUser = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
-  const { type, category_id, description, date, amount } = req.body;
+  const { type, description, date, amount, category_name } = req.body;
   const { id } = req.params; // ye user_id hoga
 
   if (!type || !description || !date || !amount) {
@@ -36,10 +37,10 @@ const addTransaction = async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO add_transaction 
-       (user_id, type, category_id, date, amount, description) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-      [id, type, category_id, date, amount, description || null]
+   (user_id, type, date, amount, description, category_name) 
+   VALUES ($1, $2, $3, $4, $5, $6) 
+   RETURNING *`,
+      [id, type, date, amount, description || null, category_name || null]
     );
 
     return res.status(201).json({
@@ -60,7 +61,7 @@ const getTransactions = async (req, res) => {
 
   try {
     const findtransaction = await pool.query(
-      "SELECT type, category_id, amount, description from add_transaction where user_id = $1",
+      "SELECT type, category_name, amount, description, date from add_transaction where user_id = $1",
       [id]
     );
 
@@ -83,4 +84,34 @@ const getTransactions = async (req, res) => {
   }
 };
 
-export { getUser, addTransaction, getTransactions };
+const balance = async (req, res) => {
+  const { id } = req.params; // user_id
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS total_income,
+      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense
+      FROM add_transaction WHERE user_id = $1`,
+      [id]
+    );
+
+    const { total_income, total_expense } = result.rows[0];
+    const total_balance = total_income - total_expense;
+
+    return res.status(200).json({
+      success: true,
+      message: "your total balance",
+      total_balance,
+      total_income,
+      total_expense,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export { getUser, addTransaction, getTransactions, balance };
