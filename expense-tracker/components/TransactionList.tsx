@@ -1,89 +1,66 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { colors, radius } from "@/constant/style";
 import { scale, verticalScale } from "@/utils/stying";
 import { AppContext } from "@/context/store";
 import { useFocusEffect } from "expo-router";
+import { FlashList } from "@shopify/flash-list";
+import Animated, { FadeInDown } from "react-native-reanimated";
+
+type TransactionItem = {
+  handleClick:  () => void;
+}
 
 const TransactionList = () => {
   const { setTransactions, transactions } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    console.log("transactions:", transactions);
-  }, []);
-
   return (
-    <FlatList
-      data={transactions}
-      keyExtractor={(item, index) => index.toString()}
-      contentContainerStyle={{ paddingBottom: verticalScale(20) }}
-      ListEmptyComponent={() => (
-        <Text style={styles.emptyText}>No transactions yet</Text>
-      )}
-      renderItem={({ item }) => (
+
+    <Animated.View
+    entering={FadeInDown.delay(100).duration(300)}
+    >
+      <View> 
         <Pressable
-          // onPress={() => onPressTransaction(item)} // for future update
-          style={({ pressed }) => [
-            styles.container,
-            { opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          {/* Left side: Image + Type/Description */}
-          <View style={styles.container2}>
-            <View style={styles.image}>
-              <Text style={{ color: "white" }}>Img</Text>
-            </View>
-
-            <View style={{ flexDirection: "column", gap: verticalScale(5) }}>
-              <Text style={{ fontSize: scale(20), color: colors.neutral200 }}>
-                {item.category}
-              </Text>
-              <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
-                {item.description}
-              </Text>
-            </View>
+        style={({ pressed }) => [
+          styles.container,
+          // { opacity: pressed ? 0.7 : 1 },
+        ]}
+      >
+        {/* Left side: Image + Category/Description */}
+        <View style={styles.leftSection}>
+          <View style={styles.image}>
+            <Text style={{ color: "white" }}>Img</Text>
           </View>
 
-          {/* Right side: Amount + Date */}
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: scale(18), color: colors.neutral200 }}>
-              ${item.amount}
+          <View style={{ flexDirection: "column", gap: verticalScale(5) }}>
+            <Text style={styles.categoryText}>
+              {transactions.category_name || "Income"}
             </Text>
-            <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
-              {item.date}
-            </Text>
+            <Text style={styles.descText}>{transactions.description || "Groceries"}</Text>
           </View>
-        </Pressable>
-      )}
-    />
+        </View>
 
-    // <View style={styles.container}>
-    //   <FlatList
-    //     data={transactions}
-    //     keyExtractor={(item, index) => index.toString()}
-    //     renderItem={({ item }) => (
-    //       <View style={styles.item}>
-    //         <Text style={styles.type}>{item.type}</Text>
-    //         <Text style={styles.category}>{item.category}</Text>
-    //         <Text style={styles.amount}>${item.amount}</Text>
-    //         <Text style={styles.description}>{item.description}</Text>
-    //       </View>
-    //     )}
-    //     ListEmptyComponent={() => (
-    //       <Text style={styles.emptyText}>No transactions yet</Text>
-    //     )}
-    //   />
-    // </View>
+        {/* Right side: Amount + Date */}
+        <View style={{ alignItems: "center" }}>
+          <Text style={styles.amountText}>${transactions.amount}</Text>
+          <Text style={styles.dateText}>
+            {transactions.date}
+          </Text>
+        </View>
+      </Pressable></View>
+    </Animated.View>
+
+
+
   );
-};
-
+}
 export default TransactionList;
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    marginTop: verticalScale(10),
+    flex: 1,
+    marginVertical: verticalScale(8),
     backgroundColor: colors.neutral700,
     justifyContent: "space-between",
     flexDirection: "row",
@@ -92,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: verticalScale(10),
     borderRadius: radius._10,
   },
-  container2: {
+  leftSection: {
     flexDirection: "row",
     gap: verticalScale(20),
     alignItems: "center",
@@ -106,9 +83,27 @@ const styles = StyleSheet.create({
     minWidth: scale(50),
     minHeight: scale(50),
   },
+  categoryText: {
+    fontSize: scale(20),
+    color: colors.neutral200,
+  },
+  descText: {
+    fontSize: scale(12),
+    color: colors.neutral400,
+  },
+  amountText: {
+    fontSize: scale(18),
+    color: colors.neutral200,
+  },
+  dateText: {
+    fontSize: scale(12),
+    color: colors.neutral400,
+  },
   emptyText: {
     textAlign: "center",
     marginTop: verticalScale(20),
     color: "#999",
   },
 });
+
+

@@ -12,7 +12,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState("");
   const [authtoken, setAuthToken] = useState("");
   const [user_Id, setUserId] = useState("");
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState(null);
   const userRef = useRef(null);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const AppProvider = ({ children }) => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `http://192.168.100.7:4000/getTransactions/${user_Id}`,
+          `http://192.168.100.102:4000/getTransactions/${user_Id}`,
           {
             method: "GET",
             headers: {
@@ -66,11 +66,11 @@ export const AppProvider = ({ children }) => {
         );
 
         const result = await response.json();
-        console.log(result);
-        console.log(result.transaction);
 
         if (result.success === true) {
           setTransactions(result.transaction);
+          console.log(result.transaction);
+          
           await AsyncStorage.setItem(
             "transactions",
             JSON.stringify(result.transaction)

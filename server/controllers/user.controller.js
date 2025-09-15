@@ -24,7 +24,7 @@ const getUser = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
-  const { type, category_id, description, date, amount } = req.body;
+  const { type, category_name, description, date, amount } = req.body;
   const { id } = req.params; // ye user_id hoga
 
   if (!type || !description || !date || !amount) {
@@ -36,10 +36,10 @@ const addTransaction = async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO add_transaction 
-       (user_id, type, category_id, date, amount, description) 
+       (user_id, type, category_name, date, amount, description) 
        VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [id, type, category_id, date, amount, description || null]
+      [id, type, category_name, date, amount, description || null]
     );
 
     return res.status(201).json({
@@ -60,7 +60,7 @@ const getTransactions = async (req, res) => {
 
   try {
     const findtransaction = await pool.query(
-      "SELECT type, category_id, amount, description from add_transaction where user_id = $1",
+      "SELECT type, category_name, amount, description, date from add_transaction where user_id = $1",
       [id]
     );
 

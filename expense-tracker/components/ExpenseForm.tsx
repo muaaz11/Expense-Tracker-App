@@ -45,13 +45,16 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
     { label: "Dinner", value: "1" },
     { label: "Medical", value: "2" },
     { label: "Groceries", value: "3" },
+    { label: "Entertainment", value: "4" },
+    { label: "sports", value: "5" },
+    { label: "trip", value: "6" },
   ];
 
   const [transaction, setTransaction] = useState<TransactionType>({
     type: "Expense",
     amount: 0,
-    description: "",
     category: "",
+    description: "",
     date: new Date(),
   });
   const [showDate, setShowDate] = useState(false);
@@ -69,7 +72,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
       setLoading(true);
 
       const reponse = await fetch(
-        `http://192.168.100.7:4000/add_transaction/${user_Id}`,
+        `http://192.168.100.102:4000/add_transaction/${user_Id}`,
         {
           method: "POST",
           headers: {
@@ -102,6 +105,8 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           category: "",
           date: new Date(),
         });
+
+        router.back()
       } else {
         Toast.show({
           type: "error",

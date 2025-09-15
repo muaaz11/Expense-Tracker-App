@@ -53,7 +53,7 @@ const Login = () => {
     try {
       setLoading(true); // show spinner
 
-      const response = await fetch("http://192.168.100.7:4000/login", {
+      const response = await fetch("http://192.168.100.102:4000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

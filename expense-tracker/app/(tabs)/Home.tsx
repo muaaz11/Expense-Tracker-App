@@ -1,11 +1,12 @@
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Typo from "@/components/Typo";
 import BalanceCard from "@/components/BalanceCard";
 import ScreenWrapper from "@/components/ScreenWrapper";
@@ -18,11 +19,18 @@ import ExpenseForm from "@/components/ExpenseForm";
 import Modal from "react-native-modal";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Toast from "react-native-toast-message";
+import { FlashList } from "@shopify/flash-list";
+import { AppContext } from "@/context/store";
 
 const Home = () => {
   const [isModalVisible, setModalVisible] = useState(false);
+  const { transactions } = useContext(AppContext);
+
+  const handleClick = () => {}
+
   return (
     <ScreenWrapper>
+      <ScrollView>
       <View
         style={{
           flex: 1,
@@ -43,12 +51,18 @@ const Home = () => {
           <BalanceCard />
         </View>
 
-        <View>
+        <View >
           <Typo fontWeight={500} size={scale(16)} color={colors.neutral350}>
             Recent Transactions
           </Typo>
 
-          <TransactionList />
+          <FlashList
+            data={transactions}
+            estimatedItemSize={60}
+            renderItem={({ item, index }) => (
+              <TransactionList item={item} handleClick={handleClick} index={index}/>
+            )}
+          />
         </View>
 
         <View style={{ position: "absolute", top: "90%", right: "6%" }}>
@@ -58,13 +72,13 @@ const Home = () => {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <TransactionModal isVisible={isModalVisible} avoidKeyboard={false}>
-            <Input></Input>
-            {/* <ExpenseForm close={() => setModalVisible(false)} /> */}
+          <Modal isVisible={isModalVisible} avoidKeyboard={false}>
+            <ExpenseForm close={() => setModalVisible(false)} />
             <Toast topOffset={20} />
-          </TransactionModal>
+          </Modal>
         </View>
       </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 };
