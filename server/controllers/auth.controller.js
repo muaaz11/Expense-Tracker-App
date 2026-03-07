@@ -55,7 +55,7 @@ const login = async (req, res) => {
 
   try {
     const user = await pool.query(
-      "SELECT id, email, password FROM users WHERE email = $1",
+      "SELECT id,name, email, password FROM users WHERE email = $1",
       [email]
     );
 
@@ -90,6 +90,7 @@ const login = async (req, res) => {
       token,
       id: user.rows[0].id,
       email: user.rows[0].email,
+      name: user.name
     });
   } catch (error) {
     console.log(error);

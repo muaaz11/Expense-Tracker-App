@@ -11,8 +11,7 @@ import Button from '@/components/Button'
 import { verticalScale } from '@/utils/stying'
 import { router } from 'expo-router'
 import Toast from 'react-native-toast-message';
-
-
+import {app_url} from '../url.js'
 
 const Register = () => {
 
@@ -39,7 +38,7 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch(`http://192.168.100.7:4000/api/v1/users/register`, {
+      const response = await fetch(`${app_url}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

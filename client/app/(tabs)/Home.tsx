@@ -38,8 +38,12 @@ const Home = () => {
             Hello
           </Typo>
           <Typo size={25} fontWeight={"600"}>
-            {user?.name || "hello"}
+            {user?.name || "User"}
           </Typo>
+
+          <View>
+            <Text>Logout</Text>
+          </View>
         </View>
 
         <View>

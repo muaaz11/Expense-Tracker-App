@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt, { jwtDecode } from "jwt-decode";
+import { app_url } from "@/url";
 
 export const AppContext = createContext();
 
@@ -49,19 +50,17 @@ export const AppProvider = ({ children }) => {
     const fetchUserDetail = async () => {
       try {
         const response = await fetch(
+          // `${app_url}/getUser/${user_Id}`,
           `http://192.168.100.7:4000/getUser/${user_Id}`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
-
         const result = await response.json();
-        console.log(result);
-
-        if (result.success) {
+        if (result.data) {
           setUser(result.data);
         } else {
           console.log("Failed to fetch userData");
@@ -82,24 +81,23 @@ export const AppProvider = ({ children }) => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.100.7:4000/getTransactions/${user_Id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${app_url}/getTransactions/${user_Id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         const result = await response.json();
 
         if (result.success === true) {
           setTransactions(result.transaction);
-          await AsyncStorage.setItem(
-            "transactions",
-            JSON.stringify(result.transaction)
-          );
+          // await AsyncStorage.setItem(
+          //   "transactions",
+          //   JSON.stringify(result.transaction),
+          // );
+
+          console.log(result.transaction);
         } else {
           console.log("Error fetching transactions:", result.message);
         }
@@ -120,7 +118,7 @@ export const AppProvider = ({ children }) => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const result = await response.json();
@@ -148,6 +146,9 @@ export const AppProvider = ({ children }) => {
         totalBalance,
         totalIncome,
         totalExpense,
+        setTotalBalance,
+        setTotalIncome,
+        setTotalExpense,
       }}
     >
       {children}

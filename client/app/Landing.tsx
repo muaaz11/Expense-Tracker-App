@@ -31,9 +31,9 @@ const Landing = () => {
       >
         <View>
           <Typo size={15} fontWeight={"300"}>
-            Hello
+            Hell 
           </Typo>
-          <Typo size={25} fontWeight={"600"}>
+          <Typo size={25} fontWeight={"600"} color="red">
             Maaz Memon
           </Typo>
         </View>

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { colors, radius, spacingX, spacingY } from "@/constant/style";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Input from "./Input";
@@ -28,7 +28,16 @@ type Form = {
 };
 
 const ExpenseForm: React.FC<Form> = ({ close }) => {
-  const { user_Id } = useContext(AppContext);
+  const {
+    user_Id,
+    setTransactions,
+    totalIncome,
+    totalBalance,
+    totalExpense,
+    setTotalBalance,
+    setTotalIncome,
+    setTotalExpense,
+  } = useContext(AppContext);
 
   const TransactionOptions = [
     { label: "expense", value: "expense" },
@@ -42,9 +51,9 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
   ];
 
   const ExpenseType = [
-    { label: "Dinner", value: "1" },
-    { label: "Medical", value: "2" },
-    { label: "Groceries", value: "3" },
+    { label: "Dinner", value: "dinner" },
+    { label: "Medical", value: "medical" },
+    { label: "Groceries", value: "groceries" },
   ];
 
   const [transaction, setTransaction] = useState<TransactionType>({
@@ -82,7 +91,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
             date: transaction.date.toISOString().slice(0, 10),
             category_name: transaction.category_name,
           }),
-        }
+        },
       );
 
       const result = await reponse.json();
@@ -95,6 +104,20 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           autoHide: true,
         });
 
+        const transResponse = await fetch(
+          `http://192.168.100.7:4000/getTransactions/${user_Id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        const transResult = await transResponse.json();
+        if (transResult.success) {
+          setTransactions(transResult.transaction);
+        }
+
         await setTransaction({
           type: "Expense",
           amount: 0,
@@ -102,6 +125,30 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           category_name: "",
           date: new Date(),
         });
+
+        close();
+
+        const response = await fetch(
+          `http://192.168.100.7:4000/balance/${user_Id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+          const timeout = setTimeout(() => {
+            setTotalBalance(Number(result.total_balance));
+            setTotalIncome(Number(result.total_income));
+            setTotalExpense(Number(result.total_expense));
+          }, 2000);
+
+          return () => clearTimeout(timeout)
+        }
       } else {
         Toast.show({
           type: "error",

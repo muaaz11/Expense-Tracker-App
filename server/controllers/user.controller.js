@@ -26,8 +26,7 @@ const getUser = async (req, res) => {
 
 const addTransaction = async (req, res) => {
   const { type, description, date, amount, category_name } = req.body;
-  const { id } = req.params; // ye user_id hoga
-
+  const { id } = req.params; 
   if (!type || !description || !date || !amount) {
     return res
       .status(400)
@@ -42,6 +41,9 @@ const addTransaction = async (req, res) => {
    RETURNING *`,
       [id, type, date, amount, description || null, category_name || null]
     );
+
+    console.log(result.rows[0]);
+    
 
     return res.status(201).json({
       success: true,
@@ -61,7 +63,7 @@ const getTransactions = async (req, res) => {
 
   try {
     const findtransaction = await pool.query(
-      "SELECT type, category_name, amount, description, date from add_transaction where user_id = $1",
+      "SELECT id, type, category_name, amount, description, date from add_transaction where user_id = $1",
       [id]
     );
 
@@ -114,4 +116,28 @@ const balance = async (req, res) => {
   }
 };
 
-export { getUser, addTransaction, getTransactions, balance };
+const deleteTransaction = async(req, res) => {
+  const {id} = req.params
+
+  const deleteQuery = await pool.query(
+    "DELETE FROM add_transaction where id = $1",[id]
+  )
+
+  if(deleteQuery.rowCount === 0) {
+    return res 
+    .status(404)
+    .json({success: false, message: "No transaction found for this id"})
+  }
+
+  return res
+  .status(200)
+  .json({success: true, message: "Transaction deleted successfully"})
+
+}
+
+const editTransaction = async(req, res) => {
+  const {id} = req.params
+
+  const query = await pool.query('SELECT ')
+}
+export { getUser, addTransaction, getTransactions, balance, deleteTransaction };
