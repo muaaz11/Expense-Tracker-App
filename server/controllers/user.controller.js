@@ -24,6 +24,26 @@ const getUser = async (req, res) => {
   }
 };
 
+const editUserInfo = async(req, res) => {
+   const {id}  = req.params
+   const {name} = req.body
+
+   const updateQuery = await pool.query(
+    `UPDATE users SET name = $1 WHERE id = $2 RETURNING *`,
+    [name, id]
+  )
+
+  if(updateQuery.rows.length === 0 ) {
+    return res
+    .status(400)
+    .json({success: false, message: "No User id found"})
+  }
+
+  return res
+  .status(200)
+  .json({success: true, message: "Successfully updated user data", data: updateQuery.rows[0]})
+}
+
 const addTransaction = async (req, res) => {
   const { type, description, date, amount, category_name } = req.body;
   const { id } = req.params; 
@@ -140,4 +160,4 @@ const editTransaction = async(req, res) => {
 
   const query = await pool.query('SELECT ')
 }
-export { getUser, addTransaction, getTransactions, balance, deleteTransaction };
+export { getUser, addTransaction, getTransactions, balance, deleteTransaction, editUserInfo };

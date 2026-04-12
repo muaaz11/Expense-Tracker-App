@@ -50,8 +50,8 @@ export const AppProvider = ({ children }) => {
     const fetchUserDetail = async () => {
       try {
         const response = await fetch(
-          // `${app_url}/getUser/${user_Id}`,
-          `http://192.168.100.7:4000/getUser/${user_Id}`,
+          `${app_url}/getUser/${user_Id}`,
+          // `http://192.168.100.7:4000/getUser/${user_Id}`,
           {
             method: "GET",
             headers: {
@@ -71,7 +71,7 @@ export const AppProvider = ({ children }) => {
     };
 
     fetchUserDetail();
-  }, []);
+  }, [user_Id]);
 
   useEffect(() => {
     if (!user_Id) {
@@ -137,6 +137,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         setAuthToken,
+        setUser,
         setUserId,
         user_Id,
         userRef,

@@ -2,6 +2,19 @@ import { Stack } from "expo-router";
 import Toast from "react-native-toast-message";
 import { AppProvider } from "../context/store.js";
 
+const StackLayout = () => {
+  return (
+    <AppProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="(modals)/profileModal"
+          options={{ presentation: "modal" }}
+        />
+      </Stack>
+    </AppProvider>
+  );
+};
+
 export default function RootLayout() {
   return (
     <AppProvider>

@@ -21,6 +21,7 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import { AppContext } from "@/context/store";
+import Loading from "@/components/Loading";
 
 type MyJwtPayload = {
   id: string;
@@ -51,7 +52,7 @@ const Login = () => {
     }
 
     try {
-      setLoading(true); // show spinner
+      setLoading(true);
 
       const response = await fetch("http://192.168.100.7:4000/login", {
         method: "POST",
@@ -87,7 +88,8 @@ const Login = () => {
         text2: "User Login Successfully",
       });
 
-      router.navigate("/Landing");
+      setLoading(false)
+      router.replace("/Landing");
     } catch (error) {
       console.error(error);
       Toast.show({
@@ -96,14 +98,14 @@ const Login = () => {
         text2: "Server Error Please try again later",
       });
     } finally {
-      setLoading(false); // hide spinner
+      setLoading(false);
     }
   };
 
   return (
     <ScreenWrapper>
       <View style={styles.container}>
-        <BackButton />
+        {/* <BackButton /> */}
 
         <View style={styles.text}>
           <Typo size={32} fontWeight={"800"}>
@@ -138,10 +140,11 @@ const Login = () => {
             </Typo>
           </TouchableOpacity>
 
-          <Button onPress={handlSubmit} loading={isLoading}>
-            <Typo size={20} color={colors.black} fontWeight={"500"}>
+          <Button onPress={handlSubmit}>
+            {loading ? <Loading /> : <Typo size={20} color={colors.black} fontWeight={500}>Login</Typo>}
+            {/* <Typo size={20} color={colors.black} fontWeight={"500"}>
               Login
-            </Typo>
+            </Typo> */}
           </Button>
         </View>
 

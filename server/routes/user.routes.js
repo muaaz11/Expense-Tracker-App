@@ -3,7 +3,8 @@ import {
   addTransaction,
   getTransactions,
   balance,
-  deleteTransaction
+  deleteTransaction,
+  editUserInfo
 } from "../controllers/user.controller.js";
 import { Router } from "express";
 import { authorization } from "../middlewares/authorization.js";
@@ -15,5 +16,6 @@ router.route("/add_transaction/:id").post(addTransaction);
 router.route("/getTransactions/:id").get(getTransactions);
 router.route("/balance/:id").get(balance);
 router.route("/deleteTransaction/:id").delete(deleteTransaction)
+router.route("/updateUserData/:id").put(editUserInfo)
 
 export default router;

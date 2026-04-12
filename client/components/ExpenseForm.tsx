@@ -104,6 +104,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
           autoHide: true,
         });
 
+        // setTransactions(prev => [transaction, ...prev] )
         const transResponse = await fetch(
           `http://192.168.100.7:4000/getTransactions/${user_Id}`,
           {
@@ -398,7 +399,7 @@ const ExpenseForm: React.FC<Form> = ({ close }) => {
             </Typo>
 
             <Input
-              keyboardType="numeric"
+              keyboardType="phone-pad"
               value={transaction.amount?.toString()}
               onChangeText={(value) =>
                 setTransaction({

@@ -8,56 +8,85 @@ import ActionsModal from "./Modal/ActionsModal";
 import Toast from "react-native-toast-message";
 
 const TransactionList = () => {
-  const { setTransactions, transactions } = useContext(AppContext);
+  const {
+    setTransactions,
+    transactions,
+    setTotalBalance,
+    setTotalIncome,
+    setTotalExpense,
+    user_Id
+  } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [openActionModal, setOpenActionModal] = useState(false);
-  const [transactionId, setTransactionId] = useState(null)
+  const [transactionId, setTransactionId] = useState(null);
 
   // const transaction = transactions.map((item) => {
   //   return item.id;
   // });
 
   const handlePress = (item) => {
-    setOpenActionModal(true)
-    setTransactionId(item.id)
+    setOpenActionModal(true);
+    setTransactionId(item.id);
   };
 
-    const deleteTransaction = async (id) => {
-      try {
-        setLoading(true);
-  
-        const response = await fetch(
-          `http://192.168.100.7:4000/deleteTransaction/${transactionId}`,
-          {
-            method: "DELETE",
-          },
-        );
-  
-        if (response.success) {
-          Toast.show({
-            type: "success",
-            text1: "successful",
-            text2: "Transaction deleted",
-            autoHide: true,
-          });
-        }
+  const deleteTransaction = async (id) => {
+    try {
+      setLoading(true);
 
-        const updated = transactions.filter((item) => item.id !== id);
-        setTransactions(updated)
-        setOpenActionModal(false)
-  
-        setLoading(false);
-      } catch (error) {
+      const response = await fetch(
+        `http://192.168.100.7:4000/deleteTransaction/${transactionId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.success) {
         Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Failed to delete the transaction",
+          type: "success",
+          text1: "successful",
+          text2: "Transaction deleted",
           autoHide: true,
         });
-      } finally{
-        setLoading(false)
       }
-    };
+
+      const updated = transactions.filter((item) => item.id !== id);
+      setTransactions(updated);
+      setOpenActionModal(false);
+
+         const tranResponse = await fetch(
+          `http://192.168.100.7:4000/balance/${user_Id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const result = await tranResponse.json();
+
+        if (result.success) {
+          const timeout = setTimeout(() => {
+            setTotalBalance(Number(result.total_balance));
+            setTotalIncome(Number(result.total_income));
+            setTotalExpense(Number(result.total_expense));
+          }, 2000);
+
+          return () => clearTimeout(timeout)
+        }
+
+      setLoading(false);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete the transaction",
+        autoHide: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View>
@@ -105,7 +134,12 @@ const TransactionList = () => {
         )}
       />
 
-      <ActionsModal visible={openActionModal} closeModal={setOpenActionModal} id={transactionId} delTransaction={deleteTransaction}/>
+      <ActionsModal
+        visible={openActionModal}
+        closeModal={setOpenActionModal}
+        id={transactionId}
+        delTransaction={deleteTransaction}
+      />
     </View>
 
     // <View style={styles.container}>
