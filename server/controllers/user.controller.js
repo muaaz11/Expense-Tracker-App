@@ -1,4 +1,7 @@
 import pool from "../database/database.js";
+import cloudinary  from "../config/cloudinary.config.js";
+// import { v2 as cloudinary } from "cloudinary";
+import Stream from "stream";
 
 const getUser = async (req, res) => {
   const { id } = req.params;
@@ -7,8 +10,8 @@ const getUser = async (req, res) => {
 
   try {
     const userDetails = await pool.query(
-      "SELECT id, name, email from users WHERE id = $1",
-      [id]
+      "SELECT id, name, email, image_url as image from users WHERE id = $1",
+      [id],
     );
 
     if (userDetails.rowCount === 0) {
@@ -24,29 +27,50 @@ const getUser = async (req, res) => {
   }
 };
 
-const editUserInfo = async(req, res) => {
-   const {id}  = req.params
-   const {name} = req.body
+const editUserInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const name = req.body.name;
 
-   const updateQuery = await pool.query(
-    `UPDATE users SET name = $1 WHERE id = $2 RETURNING *`,
-    [name, id]
-  )
+    let imageUrl = null;
 
-  if(updateQuery.rows.length === 0 ) {
-    return res
-    .status(400)
-    .json({success: false, message: "No User id found"})
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "profile_pictures" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        Stream.Readable.from(req.file.buffer).pipe(stream);
+      });
+
+      imageUrl = uploadResult.secure_url;
+    }
+
+    const updateQuery = await pool.query(
+      `UPDATE users
+       SET name = $1, image_url = COALESCE($2, image_url)
+       WHERE id = $3
+       RETURNING *`,
+      [name, imageUrl, id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: updateQuery.rows[0],
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Update failed" });
   }
-
-  return res
-  .status(200)
-  .json({success: true, message: "Successfully updated user data", data: updateQuery.rows[0]})
-}
+};
 
 const addTransaction = async (req, res) => {
   const { type, description, date, amount, category_name } = req.body;
-  const { id } = req.params; 
+  const { id } = req.params;
   if (!type || !description || !date || !amount) {
     return res
       .status(400)
@@ -59,11 +83,10 @@ const addTransaction = async (req, res) => {
    (user_id, type, date, amount, description, category_name) 
    VALUES ($1, $2, $3, $4, $5, $6) 
    RETURNING *`,
-      [id, type, date, amount, description || null, category_name || null]
+      [id, type, date, amount, description || null, category_name || null],
     );
 
     console.log(result.rows[0]);
-    
 
     return res.status(201).json({
       success: true,
@@ -84,7 +107,7 @@ const getTransactions = async (req, res) => {
   try {
     const findtransaction = await pool.query(
       "SELECT id, type, category_name, amount, description, date from add_transaction where user_id = $1",
-      [id]
+      [id],
     );
 
     if (findtransaction.rowCount === 0) {
@@ -115,7 +138,7 @@ const balance = async (req, res) => {
       COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS total_income,
       COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense
       FROM add_transaction WHERE user_id = $1`,
-      [id]
+      [id],
     );
 
     const { total_income, total_expense } = result.rows[0];
@@ -136,28 +159,35 @@ const balance = async (req, res) => {
   }
 };
 
-const deleteTransaction = async(req, res) => {
-  const {id} = req.params
+const deleteTransaction = async (req, res) => {
+  const { id } = req.params;
 
   const deleteQuery = await pool.query(
-    "DELETE FROM add_transaction where id = $1",[id]
-  )
+    "DELETE FROM add_transaction where id = $1",
+    [id],
+  );
 
-  if(deleteQuery.rowCount === 0) {
-    return res 
-    .status(404)
-    .json({success: false, message: "No transaction found for this id"})
+  if (deleteQuery.rowCount === 0) {
+    return res
+      .status(404)
+      .json({ success: false, message: "No transaction found for this id" });
   }
 
   return res
-  .status(200)
-  .json({success: true, message: "Transaction deleted successfully"})
+    .status(200)
+    .json({ success: true, message: "Transaction deleted successfully" });
+};
 
-}
+const editTransaction = async (req, res) => {
+  const { id } = req.params;
 
-const editTransaction = async(req, res) => {
-  const {id} = req.params
-
-  const query = await pool.query('SELECT ')
-}
-export { getUser, addTransaction, getTransactions, balance, deleteTransaction, editUserInfo };
+  const query = await pool.query("SELECT ");
+};
+export {
+  getUser,
+  addTransaction,
+  getTransactions,
+  balance,
+  deleteTransaction,
+  editUserInfo,
+};

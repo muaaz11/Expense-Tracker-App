@@ -1,7 +1,5 @@
 import express from "express";
-import JWT from "jsonwebtoken";
 import dotenv from "dotenv";
-import pool from "./database/database.js";
 import bodyParser from "body-parser";
 import cors from "cors";
 

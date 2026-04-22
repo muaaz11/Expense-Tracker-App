@@ -8,29 +8,27 @@ export default function Index() {
   const { user_Id } = useContext(AppContext);
   const [isNavigated, setIsNavigated] = useState(true);
 
-  const NavigationBasedOnContext = () => {
-    if (user_Id) {
+  useEffect(() => {
+
+    if(user_Id === undefined) {
+      return
+    }
+
+     if (user_Id) {
       const timeoutId = setTimeout(() => {
         console.log("User found");
-        router.navigate("/(tabs)/Home");
+        router.replace("/(tabs)/Home");
       }, 2000);
       setIsNavigated(false);
       return () => clearTimeout(timeoutId);
     } else {
       const timeoutId = setTimeout(() => {
         console.log("User not found");
-        router.navigate("/Login");
+        router.replace("/Login");
       }, 2000);
       setIsNavigated(false);
       return () => clearTimeout(timeoutId);
     }
-  };
-
-  useEffect(() => {
-    if (!isNavigated) {
-      setIsNavigated(true);
-    }
-    NavigationBasedOnContext();
   }, [user_Id]);
 
   return (

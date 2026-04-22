@@ -24,36 +24,42 @@ import { AppContext } from "@/context/store";
 import Input from "@/components/Input";
 import { app_url } from "@/url";
 import Toast from "react-native-toast-message";
-// import * as ImagePicker from 'react-native-image-picker'
+import * as ImagePicker from "expo-image-picker";
+// import { uploadToCloudinary } from "@/services";
 
 const ProfileScreen = () => {
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({
     name: "",
-    image: null,
+    image: null as string | null,
   });
 
-  const router = useRouter()
+  const router = useRouter();
 
   const { user, user_Id, setUser } = useContext(AppContext);
-  // console.log(user.name)
 
-  //   const handleImagePick = () => {
-  //     ImagePicker.launchImageLibrary({
-  //       mediaType: 'photo',
-  //       quality: 0.8,
-  //       maxWidth: 500,
-  //       maxHeight: 500,
-  //     }, (response) => {
-  //       if (response.didCancel) {
-  //         console.log('User cancelled image picker')
-  //       } else if (response.error) {
-  //         Alert.alert('Error', 'Something went wrong')
-  //       } else if (response.assets && response.assets[0]) {
-  //         setImage(response.assets[0].uri)
-  //       }
-  //     })
-  //   }
+  const handleImagePick = async () => {
+    const permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissions.granted) {
+      Alert.alert("Permission required");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 1,
+      aspect: [2, 2],
+    });
+    if (!result.canceled) {
+      const asset = result.assets[0];
+
+      setUserData((prev) => ({
+        ...prev,
+        image: asset.uri,
+      }));
+    }
+  };
 
   useEffect(() => {
     setUserData({
@@ -61,9 +67,8 @@ const ProfileScreen = () => {
       image: user?.image || null,
     });
 
-    console.log(user)
+    // console.log(user);
   }, [user]);
-
   const handleUpdate = async () => {
     if (!userData.name.trim()) {
       Alert.alert("Error", "Please enter your name");
@@ -72,36 +77,47 @@ const ProfileScreen = () => {
 
     try {
       setLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("name", userData.name);
+
+      if (userData.image) {
+        formData.append("image_url", {
+          uri: userData.image,
+          type: "image/jpeg",
+          name: "profile.jpg",
+        } as any);
+      }
+
       const response = await fetch(`${app_url}/updateUserData/${user_Id}`, {
         method: "PUT",
+        body: formData,
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({name: userData.name})
       });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        if (result.data) {
-          setUser(result.data);
-          setUserData({ ...userData, name: result.data.name });
-          router.navigate('/(tabs)/profile');
-        }
+        setUser(result.data);
 
         Toast.show({
           type: "success",
-          text1: "Successfull",
-          text2: "name update",
+          text1: "Successful",
+          text2: "Profile updated",
         });
+
+        router.navigate('/(tabs)/profile')
       }
     } catch (error) {
-        console.log("failed to update");
-        Toast.show({
-          type: 'error',
-          text1: "Failed",
-          text2: "Failed to update",
-        });
+      console.log(error);
+      Toast.show({
+        type: "error",
+        text1: "Failed",
+        text2: "Failed to update",
+      });
     } finally {
       setLoading(false);
     }
@@ -126,7 +142,7 @@ const ProfileScreen = () => {
           )}
           <TouchableOpacity
             style={styles.editImageButton}
-            //   onPress={handleImagePick}
+            onPress={handleImagePick}
           >
             <Icon.CameraIcon size={20} color="#fff" />
           </TouchableOpacity>
@@ -144,7 +160,7 @@ const ProfileScreen = () => {
               //   placeholderTextColor={colors.neutral200}
               value={userData.name}
               onChangeText={(value) =>
-                setUserData(prev => ({...prev, name:value}))
+                setUserData((prev) => ({ ...prev, name: value }))
               }
             />
           </View>

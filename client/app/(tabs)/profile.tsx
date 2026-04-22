@@ -4,7 +4,7 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import Button from "@/components/Button";
 import Typo from "@/components/Typo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, useRouter } from "expo-router";
+import { router, useLocalSearchParams, useRouter } from "expo-router";
 import Header from "@/components/Header";
 import { AppContext } from "@/context/store";
 import { colors, radius, spacingX, spacingY } from "@/constant/style";
@@ -15,6 +15,7 @@ import * as Icons from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { accountOptionType } from "@/types";
 import Toast from "react-native-toast-message";
+import * as ImagePicker from 'expo-image-picker'
 
 type AccountOptionsProps = {
   title?: string;
@@ -26,6 +27,7 @@ type AccountOptionsProps = {
 export default function Profile() {
   const { user } = useContext(AppContext);
   const [loading, setLoading] = useState(false)
+  const {image} = useLocalSearchParams()
   const router = useRouter()
 
   // console.log(user.name, "user name");
@@ -46,34 +48,34 @@ export default function Profile() {
       routeName: "/(modals)/profileModal",
     },
 
-    {
-      title: "Settings",
-      icon: (
-        <Icons.GearIcon size={25} weight="fill" color={colors.neutral100} />
-      ),
-      bgColor: "#00be4fff",
-      routeName: "/(modals)/profileModal",
-    },
+    // {
+    //   title: "Settings",
+    //   icon: (
+    //     <Icons.GearIcon size={25} weight="fill" color={colors.neutral100} />
+    //   ),
+    //   bgColor: "#00be4fff",
+    //   routeName: "/(modals)/profileModal",
+    // },
 
-    {
-      title: "Privacy Policy",
-      icon: <Icons.LockIcon size={25} weight="fill" color={colors.neutral100} />,
-      bgColor: "#02ebf3ff",
-      routeName: "/(modals)/profileModal",
-    },
+    // {
+    //   title: "Privacy Policy",
+    //   icon: <Icons.LockIcon size={25} weight="fill" color={colors.neutral100} />,
+    //   bgColor: "#02ebf3ff",
+    //   routeName: "/(modals)/profileModal",
+    // },
 
-    {
-      title: "Logout",
-      icon: (
-        <Icons.SignOutIcon
-          size={25}
-          weight="fill"
-          color={colors.neutral100}
-        />
-      ),
-      bgColor: "#fb5f5fff",
-      routeName: "/(modals)/profileModal",
-    },
+    // {
+    //   title: "Logout",
+    //   icon: (
+    //     <Icons.SignOutIcon
+    //       size={25}
+    //       weight="fill"
+    //       color={colors.neutral100}
+    //     />
+    //   ),
+    //   bgColor: "#fb5f5fff",
+    //   // routeName: handleLogout()
+    // },
   ];
 
     const handleLogout = async() => {
@@ -116,7 +118,7 @@ export default function Profile() {
     }
     ])
   }
-  const handlePress = (item: accountOptionType) => {
+  const handlePress = (item: AccountOptionsProps) => {
     if(item.title === "Logout") {
       showLogoutAlert()
     } 

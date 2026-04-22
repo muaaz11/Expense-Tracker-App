@@ -48,12 +48,11 @@ const Login = () => {
         text2: "Please fill all fields",
         visibilityTime: 1500,
       });
-      return; // stop here
+      return;
     }
 
     try {
       setLoading(true);
-
       const response = await fetch("http://192.168.100.7:4000/login", {
         method: "POST",
         headers: {
@@ -66,7 +65,12 @@ const Login = () => {
       console.log("result", result);
 
       if (!response.ok) {
-        throw new Error("Login failed", result.message);
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: "Incorrect credentials",
+        });
+        return
       }
 
       await AsyncStorage.setItem("TOKEN", result.token);
@@ -78,18 +82,16 @@ const Login = () => {
       if (storedUserToken) {
         userRef.current = storedUserToken;
         setUserId(storedUserToken);
+        Toast.show({
+          type: "success",
+          text1: "Congratulations",
+          text2: "User Login Successfully",
+        });
       } else {
         console.log("No user found for this id");
       }
-
-      Toast.show({
-        type: "success",
-        text1: "Congratulations",
-        text2: "User Login Successfully",
-      });
-
-      setLoading(false)
-      router.replace("/Landing");
+      setLoading(false);
+      router.replace("/Home");
     } catch (error) {
       console.error(error);
       Toast.show({
@@ -141,7 +143,13 @@ const Login = () => {
           </TouchableOpacity>
 
           <Button onPress={handlSubmit}>
-            {loading ? <Loading /> : <Typo size={20} color={colors.black} fontWeight={500}>Login</Typo>}
+            {loading ? (
+              <Loading />
+            ) : (
+              <Typo size={20} color={colors.black} fontWeight={500}>
+                Login
+              </Typo>
+            )}
             {/* <Typo size={20} color={colors.black} fontWeight={"500"}>
               Login
             </Typo> */}
