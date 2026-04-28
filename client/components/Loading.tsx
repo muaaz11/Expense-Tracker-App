@@ -5,7 +5,7 @@ import { colors } from '@/constant/style'
 
 const Loading = ({
     size = "large",
-    color = colors.primary
+    color = colors.black
 }: ActivityIndicatorProps) => {
     return (
         <View style={{justifyContent: 'center', alignItems: 'center'}}>

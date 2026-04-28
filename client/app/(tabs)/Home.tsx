@@ -26,13 +26,14 @@ import { AppContext } from "@/context/store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Loading from "@/components/Loading";
+import AddTransaction from "../(modals)/addTransaction";
 
 const Home = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const { user } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
 
-  const logout = async() => {
+  const logout = async () => {
     try {
       setLoading(true);
 
@@ -42,18 +43,18 @@ const Home = () => {
         router.replace("/Login");
       } else {
         Toast.show({
-          type:'error',
-          text1: 'Error logging out'
-        })
+          type: "error",
+          text1: "Error logging out",
+        });
       }
 
       setLoading(false);
     } catch (error) {
       console.log("error in loggingout customer");
       Toast.show({
-        type: 'error',
-        text1: 'Server error'
-      })
+        type: "error",
+        text1: "Server error",
+      });
     }
   };
 
@@ -77,7 +78,6 @@ const Home = () => {
 
   //   return () => backHandler.remove();
   // }, []);
-
 
   return (
     <ScreenWrapper>
@@ -108,7 +108,7 @@ const Home = () => {
           </View>
 
           <Pressable
-          onPress={logout}
+            onPress={logout}
             style={{
               paddingVertical: verticalScale(6),
               paddingHorizontal: scale(14),
@@ -116,7 +116,13 @@ const Home = () => {
               borderRadius: 8,
             }}
           >
-           {loading ? <Loading /> : <Typo size={16} fontWeight={400} color={colors.rose}>logout</Typo> }
+            {loading ? (
+              <Loading />
+            ) : (
+              <Typo size={16} fontWeight={400} color={colors.rose}>
+                logout
+              </Typo>
+            )}
           </Pressable>
         </View>
 
@@ -124,7 +130,9 @@ const Home = () => {
           <BalanceCard />
         </View>
 
-        <ScrollView>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: verticalScale(40) }}
+        >
           <Typo fontWeight={500} size={scale(16)} color={colors.neutral350}>
             Recent Transactions
           </Typo>
@@ -141,7 +149,7 @@ const Home = () => {
         >
           <Modal isVisible={isModalVisible} avoidKeyboard={false}>
             {/* <Input></Input> */}
-            <ExpenseForm close={() => setModalVisible(false)} />
+            <AddTransaction close={() => setModalVisible(false)} />
             <Toast topOffset={20} />
           </Modal>
         </View>

@@ -2,20 +2,11 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import * as Icon from "phosphor-react-native";
 import ScreenWrapper from "@/components/ScreenWrapper";
-import { router, useRouter } from "expo-router";
+import { router, useLocalSearchParams, useRouter } from "expo-router";
 import Header from "@/components/Header";
 import { colors } from "@/constant/style";
 import Button from "@/components/Button";
@@ -24,9 +15,8 @@ import { AppContext } from "@/context/store";
 import Input from "@/components/Input";
 import { app_url } from "@/url";
 import Toast from "react-native-toast-message";
-import * as ImagePicker from "expo-image-picker";
 import ImageUpload from "../../components/ImageUpload";
-// import { uploadToCloudinary } from "@/services";
+import Loading from "@/components/Loading";
 
 type WalletData = {
   id?: string;
@@ -38,97 +28,202 @@ type WalletData = {
 };
 
 const WalletModal = () => {
-  const [loading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user_Id, setWallet, wallet } = useContext(AppContext);
   const [walletData, setWalletData] = useState<WalletData>({
     name: "",
+    amount: 0,
     image: null as string | null,
   });
 
   const router = useRouter();
+  const oldWallet: {
+    wallet_id: string;
+    name: string;
+    amount: string;
+    image: string;
+  } = useLocalSearchParams();
 
-  const { user, user_Id, setUser } = useContext(AppContext);
-
-  const handleImagePick = async () => {
-    const permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissions.granted) {
-      Alert.alert("Permission required");
-      return;
+  useEffect(() => {
+    if (oldWallet.wallet_id) {
+      setWalletData({
+        name: oldWallet.name,
+        amount: Number(oldWallet.amount),
+        image: oldWallet.image,
+      });
     }
+  }, [oldWallet.wallet_id]);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 1,
-      aspect: [2, 2],
-    });
-    if (!result.canceled) {
-      const asset = result.assets[0];
-
-      setWalletData((prev) => ({
-        ...prev,
-        image: asset.uri,
-      }));
-    }
-  };
-
-  const handleUpdate = async () => {
-    const { name, image } = walletData;
-    if (!name.trim() || !image) {
-      Alert.alert("Error", "Name and Image are required");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const formData = new FormData();
-
-      formData.append("name", walletData.name);
-
-      if (walletData.image) {
-        formData.append("image_url", {
-          uri: walletData.image,
-          type: "image/jpeg",
-          name: "profile.jpg",
-        } as any);
+  const onSubmit = async () => {
+    if (!oldWallet.wallet_id) {
+      const { name, image } = walletData;
+      if (!name.trim() || !image) {
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: "Wallet name and image are required",
+        });
+        return;
       }
 
-      const response = await fetch(`${app_url}/updateUserData/${user_Id}`, {
-        method: "PUT",
-        body: formData,
-        headers: {
-          Accept: "application/json",
-        },
-      });
+      try {
+        setIsSubmitting(true);
 
-      const result = await response.json();
+        const formData = new FormData();
 
-      if (result.success) {
-        setUser(result.data);
+        formData.append("wallet_name", walletData.name);
+        formData.append("amount", walletData.amount?.toString() || "0");
+
+        if (walletData.image) {
+          formData.append("wallet_image", {
+            uri: walletData.image.uri,
+            type: "image/jpeg",
+            name: "profile.jpg",
+          } as any);
+        }
+
+        const response = await fetch(`${app_url}/addWallet/${user_Id}`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed");
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          Toast.show({
+            type: "success",
+            text1: "Successful",
+            text2: "Wallet added successfully",
+          });
+
+          router.replace("/(tabs)/wallet");
+        }
+
+        setIsSubmitting(false);
+      } catch (error) {
+        console.log(error);
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: "Failed to update",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      try {
+        if (!walletData.name.trim() || !walletData.image) {
+          Toast.show({
+            type: "error",
+            text1: "Failed",
+            text2: "Wallet name and image are required",
+          });
+          return;
+        }
+
+        setIsSubmitting(true);
+
+        const formData = new FormData();
+
+        formData.append("wallet_name", walletData.name);
+        formData.append("amount", walletData.amount?.toString() || "0");
+
+        if (walletData.image) {
+          if (walletData.image.uri) {
+            formData.append("wallet_image", {
+              uri: walletData.image.uri,
+              type: "image/jpeg",
+              name: "profile.jpg",
+            } as any);
+          } else if (typeof walletData.image === "string") {
+            formData.append("wallet_image", walletData.image);
+          }
+        }
+
+        const response = await fetch(
+          `${app_url}/updateWallet/${oldWallet.wallet_id}`,
+          {
+            method: "PUT",
+            body: formData,
+          },
+        );
+
+        console.log("reached");
+        if (!response.ok) {
+          throw new Error("Request failed");
+        }
+        const result = await response.json();
+        console.log("Update response:", result);
+
+        if (!result.success) {
+          throw new Error(result.message || "Failed to update wallet");
+        }
 
         Toast.show({
           type: "success",
           text1: "Successful",
-          text2: "Profile updated",
+          text2: "Wallet updated successfully",
         });
 
-        router.navigate("/(tabs)/profile");
+        router.replace("/(tabs)/wallet");
+        setIsSubmitting(false);
+      } catch (err:any) {
+        console.log("Fetch error details:", err.message, err);
+      } finally {
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      console.log(error);
-      Toast.show({
-        type: "error",
-        text1: "Failed",
-        text2: "Failed to update",
-      });
-    } finally {
-      setLoading(false);
     }
   };
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+
+      const response = await fetch(
+        `${app_url}/deleteWallet/${oldWallet.wallet_id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.log(result.message);
+      }
+
+      const updateWallets = wallet.filter(
+        (prev:any) => prev.id !== oldWallet.wallet_id,
+      );
+      console.log(updateWallets);
+      setWallet(updateWallets);
+
+      router.navigate("/(tabs)/wallet");
+      console.log("reached");
+
+      setIsDeleting(false);
+    } catch (error) {
+      console.log("error deleting wallet", error);
+      setIsDeleting(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <ScreenWrapper>
       <View style={styles.container}>
-        <Header title="Add New Wallet" />
+        <Header
+          title={oldWallet.wallet_id ? "Update Wallet" : "Add New Wallet"}
+        />
       </View>
 
       <View style={styles.formSection}>
@@ -145,22 +240,63 @@ const WalletModal = () => {
           </View>
         </View>
 
+        <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>Initial Amount</Text>
+          <View>
+            <Input
+              placeholder="Enter Initial Amount"
+              value={walletData.amount?.toString() || ""}
+              onChangeText={(value) =>
+                setWalletData((prev) => ({
+                  ...prev,
+                  amount: parseFloat(value) || 0,
+                }))
+              }
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
         <View style={styles.WalletImageSection}>
           <Typo>Wallet Image</Typo>
           <ImageUpload
             file={walletData.image}
             placeHolder="upload Image"
             containerStyle={{ marginTop: 10 }}
-            onSelect={(file) => setWalletData({ ...file, image: file })}
+            onSelect={(file) =>
+              setWalletData((prev) => ({ ...prev, image: file }))
+            }
             onClear={() => setWalletData({ ...walletData, image: null })}
           />
         </View>
 
         <View style={styles.button}>
-          <Button loading={loading} onPress={handleUpdate}>
-            <Typo color={colors.neutral600} fontWeight={600}>
-              Add Wallet
-            </Typo>
+          {oldWallet.wallet_id && (
+            <Button
+              style={{ backgroundColor: colors.rose, width: "15%" }}
+              onPress={handleDelete}
+            >
+              {isDeleting ? (
+                <Loading size={20} />
+              ) : (
+                <Icon.TrashIcon color={colors.neutral100} />
+              )}
+            </Button>
+          )}
+          <Button
+            onPress={onSubmit}
+            style={{
+              backgroundColor: colors.primary,
+              width: oldWallet.wallet_id ? "80%" : "100%",
+            }}
+          >
+            {isSubmitting ? (
+              <Loading color={colors.neutral800} />
+            ) : (
+              <Typo color={colors.neutral600} fontWeight={600}>
+                {oldWallet.wallet_id ? "Update Wallet" : "Add Wallet"}
+              </Typo>
+            )}
           </Button>
         </View>
       </View>
@@ -176,6 +312,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.neutral900,
+    flexDirection: "row",
   },
   imageSection: {
     alignItems: "center",
@@ -258,8 +395,10 @@ const styles = StyleSheet.create({
   WalletImageSection: {},
 
   button: {
-    // alignItems: 'flex-end'
-    justifyContent: "flex-start",
-    marginTop: 100,
+    justifyContent: "center",
+    marginTop: 200,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
 });

@@ -8,6 +8,7 @@ export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [user, setUser] = useState([]);
+  const [wallet, setWallet] = useState([]);
   const [authtoken, setAuthToken] = useState("");
   const [user_Id, setUserId] = useState("");
   const [transactions, setTransactions] = useState([]);
@@ -96,8 +97,6 @@ export const AppProvider = ({ children }) => {
           //   "transactions",
           //   JSON.stringify(result.transaction),
           // );
-
-          console.log(result.transaction);
         } else {
           console.log("Error fetching transactions:", result.message);
         }
@@ -133,6 +132,34 @@ export const AppProvider = ({ children }) => {
     fetchBalance();
   }, [user_Id]);
 
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+
+        if(!user_Id){
+          return
+        }
+
+        const response = await fetch(`${app_url}/fetchWallets/${user_Id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setWallet(result.wallets);
+      } catch (error) {
+        console.log("Error fetching Wallet", error);
+      }
+    };
+
+    fetchWallets();
+  }, [user_Id]);
   return (
     <AppContext.Provider
       value={{
@@ -150,6 +177,8 @@ export const AppProvider = ({ children }) => {
         setTotalBalance,
         setTotalIncome,
         setTotalExpense,
+        setWallet,
+        wallet,
       }}
     >
       {children}

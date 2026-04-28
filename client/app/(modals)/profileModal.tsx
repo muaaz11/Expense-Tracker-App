@@ -25,6 +25,7 @@ import Input from "@/components/Input";
 import { app_url } from "@/url";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
+import BackButton from "@/components/BackButton";
 // import { uploadToCloudinary } from "@/services";
 
 const ProfileScreen = () => {
@@ -50,6 +51,7 @@ const ProfileScreen = () => {
       mediaTypes: ["images"],
       quality: 1,
       aspect: [2, 2],
+      allowsEditing: true
     });
     if (!result.canceled) {
       const asset = result.assets[0];
@@ -109,7 +111,7 @@ const ProfileScreen = () => {
           text2: "Profile updated",
         });
 
-        router.navigate('/(tabs)/profile')
+        router.push('/(tabs)/wallet')
       }
     } catch (error) {
       console.log(error);
@@ -167,8 +169,8 @@ const ProfileScreen = () => {
         </View>
 
         <View>
-          <Button loading={loading} onPress={handleUpdate}>
-            <Typo>Update</Typo>
+          <Button loading={loading} onPress={handleUpdate} style={{backgroundColor: colors.primary}}>
+            <Typo color={colors.neutral800} fontWeight={500}>Update</Typo>
           </Button>
         </View>
       </View>
@@ -184,6 +186,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.neutral900,
+    flexDirection: 'row'
   },
   imageSection: {
     alignItems: "center",

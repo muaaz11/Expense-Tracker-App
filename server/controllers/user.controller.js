@@ -1,5 +1,5 @@
 import pool from "../database/database.js";
-import cloudinary  from "../config/cloudinary.config.js";
+import cloudinary from "../config/cloudinary.config.js";
 // import { v2 as cloudinary } from "cloudinary";
 import Stream from "stream";
 
@@ -41,7 +41,7 @@ const editUserInfo = async (req, res) => {
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
+          },
         );
         Stream.Readable.from(req.file.buffer).pipe(stream);
       });
@@ -54,14 +54,13 @@ const editUserInfo = async (req, res) => {
        SET name = $1, image_url = COALESCE($2, image_url)
        WHERE id = $3
        RETURNING *`,
-      [name, imageUrl, id]
+      [name, imageUrl, id],
     );
 
     return res.status(200).json({
       success: true,
       data: updateQuery.rows[0],
     });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false, message: "Update failed" });
@@ -161,23 +160,28 @@ const balance = async (req, res) => {
 
 const deleteTransaction = async (req, res) => {
   const { id } = req.params;
+  try {
+    const deleteQuery = await pool.query(
+      "DELETE FROM add_transaction where id = $1",
+      [id],
+    );
 
-  const deleteQuery = await pool.query(
-    "DELETE FROM add_transaction where id = $1",
-    [id],
-  );
+    if (deleteQuery.rowCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No transaction found for this id" });
+    }
 
-  if (deleteQuery.rowCount === 0) {
     return res
-      .status(404)
-      .json({ success: false, message: "No transaction found for this id" });
+      .status(200)
+      .json({ success: true, message: "Transaction deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: true, message: "Internal Server Error" });
   }
-
-  return res
-    .status(200)
-    .json({ success: true, message: "Transaction deleted successfully" });
 };
-
 const editTransaction = async (req, res) => {
   const { id } = req.params;
 

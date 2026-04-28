@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import Toast from "react-native-toast-message";
 import { AppProvider } from "../context/store.js";
 
-const StackLayout = () => {
+export const StackLayout = () => {
   return (
     <AppProvider>
       <Stack screenOptions={{ headerShown: false }}>
@@ -11,6 +11,14 @@ const StackLayout = () => {
           options={{ presentation: "modal" }}
         />
       </Stack>
+
+       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="(modals)/addWallet"
+          options={{ presentation: "modal" }}
+        />
+      </Stack>
+      <Toast />
     </AppProvider>
   );
 };

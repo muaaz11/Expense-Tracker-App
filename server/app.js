@@ -6,6 +6,7 @@ import cors from "cors";
 // Routes
 import authRoute from "./routes/auth.routes.js";
 import userRoute from "./routes/user.routes.js";
+import walletRoute from "./routes/wallet.routes.js"
 
 const PORT = 4000;
 
@@ -27,6 +28,7 @@ app.get("/test", (req, res) => {
 
 app.use("/", authRoute);
 app.use("/", userRoute);
+app.use("/", walletRoute);
 
 app.listen(PORT, () => {
   console.log("server is running on port", PORT);
