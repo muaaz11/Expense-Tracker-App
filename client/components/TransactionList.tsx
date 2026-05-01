@@ -3,9 +3,14 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { colors, radius } from "@/constant/style";
 import { scale, verticalScale } from "@/utils/stying";
 import { AppContext } from "@/context/store";
-import { useFocusEffect } from "expo-router";
+import {useRouter } from "expo-router";
 import ActionsModal from "./Modal/ActionsModal";
 import Toast from "react-native-toast-message";
+import { expenseCategories, incomeCategory } from "@/constant/data";
+import Typo from "./Typo";
+import { Label } from "@react-navigation/elements";
+import Loading from "./Loading";
+import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
 
 const TransactionList = () => {
   const {
@@ -20,13 +25,21 @@ const TransactionList = () => {
   const [openActionModal, setOpenActionModal] = useState(false);
   const [transactionId, setTransactionId] = useState(null);
 
-  // const transaction = transactions.map((item) => {
-  //   return item.id;
-  // });
-
+  const router = useRouter()  
+  
   const handlePress = (item) => {
-    setOpenActionModal(true);
-    setTransactionId(item.id);
+    router.push({
+      pathname: '/(modals)/addTransaction',
+      params: {
+        id: item?.id,
+        type: item?.type,
+        amount: item?.amount,
+        category: item?.category_name,
+        date: item.date,
+        description: item?.description,
+        wallet_id: item.wallet_id
+      }
+    })
   };
 
   const deleteTransaction = async (id) => {
@@ -87,15 +100,32 @@ const TransactionList = () => {
       setLoading(false);
     }
   };
+  const getCategoryInfo = (item: any) => {
+    if (item.type === "income") {
+      return {
+        label: incomeCategory.label,
+        icon: incomeCategory.icon,
+        bgColor: incomeCategory.bgColor,
+      };
+    }
+
+    return (
+      (expenseCategories as any)[item.category_name] || expenseCategories.others
+    );
+  };
 
   return (
-    <View>
-      <FlatList
+    <View style={styles.wrapper}>
+      <View style={styles.loadingWrapper}>
+        {loading ? (
+          <Loading size={50} color={colors.green} />
+        ) : (
+        <FlatList
         data={transactions}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ paddingBottom: verticalScale(20) }}
         ListEmptyComponent={() => (
-          <Text style={styles.emptyText}>No transactions yet</Text>
+          <Typo style={styles.emptyText}>No transactions yet</Typo>
         )}
         renderItem={({ item }) => (
           <Pressable
@@ -107,32 +137,47 @@ const TransactionList = () => {
           >
             {/* Left side: Image + Type/Description */}
             <View style={styles.container2}>
-              <View style={styles.image}>
-                <Text style={{ color: "white" }}>{transactions.id}</Text>
+              <View
+                style={[
+                  styles.image,
+                  { backgroundColor: getCategoryInfo(item).bgColor },
+                ]}
+              >
+                {(() => {
+                  const CategoryIcon = getCategoryInfo(item).icon;
+                  return <CategoryIcon size={20} color="white" />;
+                })()}
               </View>
 
               <View style={{ flexDirection: "column", gap: verticalScale(5) }}>
-                <Text style={{ fontSize: scale(20), color: colors.neutral200 }}>
-                  {item.category_name ? `${item.category_name}` : "Income"}
-                </Text>
-                <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
+                <Typo style={{ fontSize: scale(20), color: colors.neutral200 }}>
+                  {getCategoryInfo(item).label}
+                </Typo>
+                <Typo style={{ fontSize: scale(12), color: colors.neutral400 }}>
                   {item.description}
-                </Text>
+                </Typo>
               </View>
             </View>
 
             {/* Right side: Amount + Date */}
             <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: scale(18), color: colors.neutral200 }}>
-                {item.amount}
-              </Text>
-              <Text style={{ fontSize: scale(12), color: colors.neutral400 }}>
+                <Typo
+                  style={{
+                    fontSize: scale(18),
+                    color: item.type === "income" ? colors.green : colors.rose,
+                  }}
+                >
+                  {item.type === "expense" ? "-" : "+"}${item.amount}
+                </Typo>
+              <Typo style={{ fontSize: scale(12), color: colors.neutral400 }}>
                 {item.date.split("T")[0]}
-              </Text>
+              </Typo>
             </View>
           </Pressable>
         )}
       />
+      )}
+      </View>
 
       <ActionsModal
         visible={openActionModal}
@@ -141,24 +186,6 @@ const TransactionList = () => {
         delTransaction={deleteTransaction}
       />
     </View>
-
-    // <View style={styles.container}>
-    //   <FlatList
-    //     data={transactions}
-    //     keyExtractor={(item, index) => index.toString()}
-    //     renderItem={({ item }) => (
-    //       <View style={styles.item}>
-    //         <Text style={styles.type}>{item.type}</Text>
-    //         <Text style={styles.category}>{item.category}</Text>
-    //         <Text style={styles.amount}>${item.amount}</Text>
-    //         <Text style={styles.description}>{item.description}</Text>
-    //       </View>
-    //     )}
-    //     ListEmptyComponent={() => (
-    //       <Text style={styles.emptyText}>No transactions yet</Text>
-    //     )}
-    //   />
-    // </View>
   );
 };
 

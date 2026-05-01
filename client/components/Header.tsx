@@ -11,10 +11,18 @@ const Header: React.FC<HeaderProps> = ({ leftIcon, title }) => {
   return (
     <View style={styles.container}>
       {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
-      {title && <Typo fontWeight={"600"} size={20} style={{
-        textAlign: 'center',
-        width: leftIcon ? "80%" : "100%"
-      }}>{title}</Typo>}
+      {title && (
+        <Typo
+          fontWeight={"600"}
+          size={20}
+          style={{
+            textAlign: "center",
+            width: leftIcon ? "80%" : "100%",
+          }}
+        >
+          {title}
+        </Typo>
+      )}
     </View>
   );
 };
@@ -26,9 +34,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 
-  leftIcon: {
-
-  }
+  leftIcon: {},
 });
 
 export default Header;

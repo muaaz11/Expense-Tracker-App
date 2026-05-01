@@ -11,6 +11,8 @@ import { scale, verticalScale } from "@/utils/stying";
 import { colors } from "@/constant/style";
 import { AppContext } from "@/context/store";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import * as Icons from "phosphor-react-native";
+
 const BalanceCard = () => {
   const { totalBalance, totalIncome, totalExpense } = useContext(AppContext);
 
@@ -21,26 +23,67 @@ const BalanceCard = () => {
           Total Balance
         </Typo>
 
-        <Typo size={25} fontWeight={"600"} style={styles.balance}>
-          {totalBalance !== undefined ? `${totalBalance}.00` : `$0.00`}
+        <Typo size={25} fontWeight={"bold"} style={styles.balance}>
+          ${totalBalance !== undefined ? `${totalBalance}.00` : `$0.00`}
         </Typo>
       </View>
 
       <View style={styles.expenseIncome}>
-        <View>
+        <View style={{ flexDirection: "row", alignItems: 'center' }}>
           {/* icon */}
-          <Typo style={styles.income}>Income</Typo>
-          <Typo style={styles.incomBal}>
-            {totalIncome !== undefined ? `${totalIncome}.00` : "0.00"}
-          </Typo>
+          <View>
+            <Typo style={styles.income}>Income</Typo>
+            <Typo style={styles.incomBal}>
+              {totalIncome !== undefined ? `${totalIncome}.00` : "0.00"}
+            </Typo>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: colors.neutral200,
+              borderRadius: 50,
+              padding: 8,
+              justifyContent: "center",
+              alignItems: "center",
+              marginLeft: 10,
+              width: 25,             
+              height: 25,       
+            }}
+          >
+            <Icons.ArrowUpIcon
+              size={15}
+              weight="bold"
+              color={colors.green}
+            />
+          </View>
         </View>
 
-        <View>
-          {/* icon */}
-          <Typo style={styles.expense}>Expense</Typo>
-          <Typo style={styles.expenseBal}>
-            {totalExpense !== undefined ? `${totalExpense}.00` : "0.00"}
-          </Typo>
+        <View style={{ flexDirection: "row", alignItems: 'center'}}>
+          <View>
+            <Typo style={styles.expense}>Expense</Typo>
+            <Typo style={styles.expenseBal}>
+              {totalExpense !== undefined ? `${totalExpense}.00` : "0.00"}
+            </Typo>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: colors.neutral200,
+              borderRadius: 50,    
+              padding: 8,
+              justifyContent: "center",
+              alignItems: "center",  
+              marginLeft: 10,       
+              width: 25,             
+              height: 25,            
+            }}
+          >
+            <Icons.ArrowDownIcon
+              size={15}
+              weight="bold"  
+              color={colors.rose}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -65,7 +108,7 @@ const styles = StyleSheet.create({
   },
 
   balance: {
-    color: colors.primary,
+    color: colors.black,
   },
 
   expenseIncome: {
@@ -92,5 +135,6 @@ const styles = StyleSheet.create({
   expenseBal: {
     color: colors.rose,
     fontWeight: "800",
+    // fontSize: 18
   },
 });

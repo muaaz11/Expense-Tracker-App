@@ -5,6 +5,14 @@ import { AppProvider } from "../context/store.js";
 export const StackLayout = () => {
   return (
     <AppProvider>
+
+       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="(modals)/addTransaction"
+          options={{ presentation: "modal" }}
+        />
+      </Stack>
+
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen
           name="(modals)/profileModal"

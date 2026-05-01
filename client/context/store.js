@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import jwt, { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { app_url } from "@/url";
 
 export const AppContext = createContext();
@@ -22,13 +22,10 @@ export const AppProvider = ({ children }) => {
       try {
         const storedToken = await AsyncStorage.getItem("TOKEN");
         if (!storedToken) return;
-
         setAuthToken(storedToken);
-
         try {
           const decoded = jwtDecode(storedToken);
           const userIdFromToken = decoded?.id;
-
           if (userIdFromToken) {
             setUserId(userIdFromToken);
             userRef.current = userIdFromToken;
@@ -43,123 +40,88 @@ export const AppProvider = ({ children }) => {
         console.log("Error retrieving token:", error);
       }
     };
-
     checkAuth();
   }, []);
 
   useEffect(() => {
+    if (!user_Id) return;
     const fetchUserDetail = async () => {
       try {
-        const response = await fetch(
-          `${app_url}/getUser/${user_Id}`,
-          // `http://192.168.100.7:4000/getUser/${user_Id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
+        const response = await fetch(`${app_url}/getUser/${user_Id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
         const result = await response.json();
         if (result.data) {
           setUser(result.data);
-        } else {
-          console.log("Failed to fetch userData");
         }
       } catch (error) {
-        console.log("Error in fetcing data from Database");
+        console.log("Error fetching user data:", error);
       }
     };
-
     fetchUserDetail();
   }, [user_Id]);
 
   useEffect(() => {
-    if (!user_Id) {
-      // setLoading(false);
-      return;
-    }
-
-    const fetchData = async () => {
+    if (!user_Id) return;
+    const fetchTransactions = async () => {
       try {
         const response = await fetch(`${app_url}/getTransactions/${user_Id}`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
-
         const result = await response.json();
-
-        if (result.success === true) {
+        if (result.success) {
           setTransactions(result.transaction);
-          // await AsyncStorage.setItem(
-          //   "transactions",
-          //   JSON.stringify(result.transaction),
-          // );
-        } else {
-          console.log("Error fetching transactions:", result.message);
         }
       } catch (error) {
-        console.error("Error fetching transactions:", err);
+        console.error("Error fetching transactions:", error);
       }
     };
-
-    fetchData();
+    fetchTransactions();
   }, [user_Id]);
 
   useEffect(() => {
+    if (!user_Id) return;
     const fetchBalance = async () => {
-      const response = await fetch(
-        `http://192.168.100.7:4000/balance/${user_Id}`,
-        {
+      try {
+        const response = await fetch(`${app_url}/balance/${user_Id}`, {
+          // ✅ fixed hardcoded IP
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        setTotalBalance(Number(result.total_balance));
-        setTotalIncome(Number(result.total_income));
-        setTotalExpense(Number(result.total_expense));
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setTotalBalance(Number(result.total_balance));
+          setTotalIncome(Number(result.total_income));
+          setTotalExpense(Number(result.total_expense));
+        }
+      } catch (error) {
+        console.log("Error fetching balance:", error);
       }
     };
-
     fetchBalance();
   }, [user_Id]);
 
   useEffect(() => {
+    if (!user_Id) return;
     const fetchWallets = async () => {
       try {
-
-        if(!user_Id){
-          return
-        }
-
         const response = await fetch(`${app_url}/fetchWallets/${user_Id}`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
-
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const result = await response.json();
         setWallet(result.wallets);
       } catch (error) {
-        console.log("Error fetching Wallet", error);
+        console.log("Error fetching wallets:", error);
       }
     };
-
     fetchWallets();
-  }, [user_Id]);
+  }, [user_Id]); // ✅ removed wallet.amount — was causing infinite re-renders
+
   return (
     <AppContext.Provider
       value={{

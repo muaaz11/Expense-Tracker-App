@@ -153,12 +153,10 @@ const WalletModal = () => {
           },
         );
 
-        console.log("reached");
         if (!response.ok) {
           throw new Error("Request failed");
         }
         const result = await response.json();
-        console.log("Update response:", result);
 
         if (!result.success) {
           throw new Error(result.message || "Failed to update wallet");

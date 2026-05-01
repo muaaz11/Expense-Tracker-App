@@ -68,30 +68,104 @@ const editUserInfo = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
-  const { type, description, date, amount, category_name } = req.body;
+  const { type, wallet_id, description, date, amount, category_name } =
+    req.body;
   const { id } = req.params;
-  if (!type || !description || !date || !amount) {
+
+  if (!type || !date || !amount || !wallet_id) {
     return res
       .status(400)
-      .json({ message: "Fill the required details", success: false });
+      .json({ success: false, message: "Fill the required details" });
   }
 
   try {
-    const result = await pool.query(
-      `INSERT INTO add_transaction 
-   (user_id, type, date, amount, description, category_name) 
-   VALUES ($1, $2, $3, $4, $5, $6) 
-   RETURNING *`,
-      [id, type, date, amount, description || null, category_name || null],
+    const walletResult = await pool.query(
+      `SELECT * FROM wallets WHERE id = $1 AND user_id = $2`,
+      [wallet_id, id],
     );
 
-    console.log(result.rows[0]);
+    if (walletResult.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Wallet not found" });
+    }
 
-    return res.status(201).json({
-      success: true,
-      message: "Transaction added successfully",
-      transaction: result.rows[0],
-    });
+    const selectedWallet = walletResult.rows[0];
+
+    if (type === "expense") {
+      if (Number(selectedWallet.amount) < Number(amount)) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient balance in selected wallet",
+        });
+      }
+
+      await pool.query(
+        `UPDATE wallets 
+         SET 
+           amount = amount - $1,
+           total_expense = COALESCE(total_expense, 0) + $1
+         WHERE id = $2`,
+        [amount, wallet_id],
+      );
+
+      const result = await pool.query(
+        `INSERT INTO add_transaction (user_id, wallet_id, type, date, amount, description, category_name)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [
+          id,
+          wallet_id,
+          type,
+          date,
+          amount,
+          description || null,
+          category_name || null,
+        ],
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "Expense added successfully",
+        transaction: result.rows[0],
+      });
+    }
+
+    if (type === "income") {
+      await pool.query(
+        `UPDATE wallets 
+         SET 
+           amount = amount + $1,
+           total_income = COALESCE(total_income, 0) + $1
+         WHERE id = $2`,
+        [amount, wallet_id],
+      );
+
+      const result = await pool.query(
+        `INSERT INTO add_transaction (user_id, wallet_id, type, date, amount, description, category_name)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [
+          id,
+          wallet_id,
+          type,
+          date,
+          amount,
+          description || null,
+          category_name || null,
+        ],
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "Income added successfully",
+        transaction: result.rows[0],
+      });
+    }
+
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid transaction type" });
   } catch (error) {
     console.error("Error inserting transaction:", error);
     return res
@@ -105,7 +179,7 @@ const getTransactions = async (req, res) => {
 
   try {
     const findtransaction = await pool.query(
-      "SELECT id, type, category_name, amount, description, date from add_transaction where user_id = $1",
+      "SELECT id, type, category_name, amount, description, date, wallet_id from add_transaction where user_id = $1",
       [id],
     );
 
@@ -182,10 +256,116 @@ const deleteTransaction = async (req, res) => {
       .json({ success: true, message: "Internal Server Error" });
   }
 };
-const editTransaction = async (req, res) => {
-  const { id } = req.params;
+const updateTransaction = async (req, res) => {
+  const { type, wallet_id, description, date, amount, category_name } =
+    req.body;
+  const { id, user_id } = req.params;
 
-  const query = await pool.query("SELECT ");
+  if (!type || !date || !amount || !wallet_id) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Fill the required details" });
+  }
+
+  try {
+    const walletResult = await pool.query(
+      `SELECT * FROM wallets WHERE id = $1 AND user_id = $2`,
+      [wallet_id, user_id],
+    );
+
+    if (walletResult.rows.length === 0) {
+      console.log(walletResult.rows);
+      return res
+        .status(404)
+        .json({ success: false, message: "Wallet not found" });
+    }
+
+    const selectedWallet = walletResult.rows[0];
+
+    if (type === "expense") {
+      if (Number(selectedWallet.amount) < Number(amount)) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient balance in selected wallet",
+        });
+      }
+
+      await pool.query(
+        `UPDATE wallets 
+         SET 
+           amount = amount - $1,
+           total_expense = COALESCE(total_expense, 0) + $1
+         WHERE id = $2`,
+        [amount, wallet_id],
+      );
+
+      const result = await pool.query(
+        `UPDATE add_transaction 
+   SET wallet_id = $1, type = $2, date = $3, amount = $4, description = $5, category_name = $6 
+   WHERE id = $7
+   RETURNING *`, // ← add this
+        [
+          wallet_id,
+          type,
+          date,
+          amount,
+          description || null,
+          category_name || null,
+          id,
+        ],
+      );
+
+      console.log(result.rows);
+
+      return res.status(201).json({
+        success: true,
+        message: "Expenses updated successfully",
+        transaction: result.rows[0],
+      });
+    }
+
+    if (type === "income") {
+      await pool.query(
+        `UPDATE wallets 
+         SET 
+           amount = amount + $1,
+           total_income = COALESCE(total_income, 0) + $1
+         WHERE id = $2`,
+        [amount, wallet_id],
+      );
+
+      const result = await pool.query(
+        `UPDATE add_transaction 
+   SET wallet_id = $1, type = $2, date = $3, amount = $4, description = $5, category_name = $6 
+   WHERE id = $7
+   RETURNING *`,
+        [
+          wallet_id,
+          type,
+          date,
+          amount,
+          description || null,
+          category_name || null,
+          id,
+        ],
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "Income updated successfully",
+        transaction: result.rows[0],
+      });
+    }
+
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid transaction type" });
+  } catch (error) {
+    console.error("Error inserting transaction:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
 };
 export {
   getUser,
@@ -194,4 +374,5 @@ export {
   balance,
   deleteTransaction,
   editUserInfo,
+  updateTransaction,
 };

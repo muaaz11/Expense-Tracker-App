@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { colors, radius, spacingX, spacingY } from "@/constant/style";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import Typo from "@/components/Typo";
@@ -24,6 +24,10 @@ const Wallet = () => {
       return total + Number(item.amount || 0);
     }, 0);
 
+  // useEffect(() => {
+  //   fetchWallets();
+  // }, []);
+
   return (
     <ScreenWrapper>
       <View>
@@ -41,24 +45,23 @@ const Wallet = () => {
             Total Balance
           </Typo>
         </View>
-<ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: verticalScale(40) }}
-          >
-        <View style={styles.flexRow}>
-          <View style={styles.WalletHeader}>
-            <Typo style={styles.walletText} size={24}>
-              My Wallets
-            </Typo>
-            <TouchableOpacity
-              style={styles.plusBtn}
-              onPress={() => router.navigate("/(modals)/addWallet")}
-            >
-              <Icon.PlusIcon style={[styles.plusBtn]} />
-            </TouchableOpacity>
-          </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: verticalScale(40) }}
+        >
+          <View style={styles.flexRow}>
+            <View style={styles.WalletHeader}>
+              <Typo style={styles.walletText} size={24}>
+                My Wallets
+              </Typo>
+              <TouchableOpacity
+                style={styles.plusBtn}
+                onPress={() => router.navigate("/(modals)/addWallet")}
+              >
+                <Icon.PlusIcon style={[styles.plusBtn]} />
+              </TouchableOpacity>
+            </View>
 
-          
             <Animated.View
               style={styles.walletList}
               entering={FadeInDown.delay(100).damping(14).springify()}
@@ -110,8 +113,8 @@ const Wallet = () => {
                 </TouchableOpacity>
               ))}
             </Animated.View>
-        </View>
-          </ScrollView>
+          </View>
+        </ScrollView>
       </View>
     </ScreenWrapper>
   );

@@ -71,6 +71,7 @@ const ProfileScreen = () => {
 
     // console.log(user);
   }, [user]);
+  
   const handleUpdate = async () => {
     if (!userData.name.trim()) {
       Alert.alert("Error", "Please enter your name");

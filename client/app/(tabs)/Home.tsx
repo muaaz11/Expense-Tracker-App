@@ -26,10 +26,10 @@ import { AppContext } from "@/context/store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Loading from "@/components/Loading";
-import AddTransaction from "../(modals)/addTransaction";
+import * as Icons from "phosphor-react-native";
+
 
 const Home = () => {
-  const [isModalVisible, setModalVisible] = useState(false);
   const { user } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
 
@@ -108,21 +108,16 @@ const Home = () => {
           </View>
 
           <Pressable
-            onPress={logout}
+            onPress={() => router.navigate('/Search')}
             style={{
-              paddingVertical: verticalScale(6),
-              paddingHorizontal: scale(14),
+              // paddingVertical: verticalScale(6),
+              // paddingHorizontal: scale(14),
               backgroundColor: colors.neutral800,
+              padding: verticalScale(10),
               borderRadius: 8,
             }}
           >
-            {loading ? (
-              <Loading />
-            ) : (
-              <Typo size={16} fontWeight={400} color={colors.rose}>
-                logout
-              </Typo>
-            )}
+            <Icons.MagnifyingGlassIcon color={colors.neutral350} size={20}/>
           </Pressable>
         </View>
 
@@ -141,17 +136,7 @@ const Home = () => {
         </ScrollView>
 
         <View style={{ position: "absolute", top: "90%", right: "6%" }}>
-          <AddTransactionBtn onPress={() => setModalVisible(true)} />
-        </View>
-
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <Modal isVisible={isModalVisible} avoidKeyboard={false}>
-            {/* <Input></Input> */}
-            <AddTransaction close={() => setModalVisible(false)} />
-            <Toast topOffset={20} />
-          </Modal>
+          <AddTransactionBtn onPress={() => router.push('/(modals)/addTransaction')} />
         </View>
       </View>
     </ScreenWrapper>

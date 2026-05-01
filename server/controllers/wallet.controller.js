@@ -88,23 +88,16 @@ const updateWallet = async (req, res) => {
     const { id } = req.params;
     const { wallet_name, amount } = req.body;
 
-    console.log("Update wallet params:", { id, wallet_name, amount });
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file ? "File received" : "No file");
-
     let wallet_image = null;
 
     if (!id) {
       return res.status(409).json({ success: false, message: "Need id" });
     }
 
-    // Check if wallet exists first
     const walletCheck = await pool.query(
       `SELECT * FROM wallets WHERE id = $1`,
       [id]
     );
-
-    console.log("Wallet check result:", walletCheck.rows);
 
     if (walletCheck.rowCount === 0) {
       return res.status(404).json({
@@ -135,8 +128,6 @@ const updateWallet = async (req, res) => {
       `UPDATE wallets SET wallet_name = COALESCE($1, wallet_name), amount = COALESCE($2, amount), wallet_image = COALESCE($3, wallet_image) WHERE id = $4 RETURNING *`,
       [wallet_name || null, amount || null, wallet_image, id],
     );
-
-    console.log("Update result:", updateWalletQuery.rows);
 
     if (updateWalletQuery.rowCount > 0) {
       return res.status(200).json({

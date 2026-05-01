@@ -1,4 +1,5 @@
 import {
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -22,50 +23,57 @@ import Button from "../../components/Button";
 import Toast from "react-native-toast-message";
 import { router, useLocalSearchParams } from "expo-router";
 import { AppContext } from "@/context/store";
+import Loading from "@/components/Loading";
+import { Image } from "expo-image";
+import { expenseCategories } from "@/constant/data";
+import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
+import { app_url } from "@/url";
 
-type Form = {
-  close: () => void;
-};
-
-const AddTransaction: React.FC<Form> = ({ close }) => {
+const AddTransaction: React.FC = () => {
   const {
     user_Id,
     setTransactions,
-    totalIncome,
-    totalBalance,
-    totalExpense,
     setTotalBalance,
     setTotalIncome,
     setTotalExpense,
+    transactions,
+    fetchWallets,
+    wallet,
   } = useContext(AppContext);
 
   const TransactionOptions = [
     { label: "expense", value: "expense" },
     { label: "income", value: "income" },
   ];
-
-  const WalletType = [
-    { label: "Job", value: "1" },
-    { label: "Freelancing", value: "2" },
-    { label: "Side Hustle", value: "3" },
-  ];
-
-  const ExpenseType = [
-    { label: "Dinner", value: "dinner" },
-    { label: "Medical", value: "medical" },
-    { label: "Groceries", value: "groceries" },
-  ];
-
   const [transaction, setTransaction] = useState<TransactionType>({
     type: "Expense",
     amount: 0,
     description: "",
     category_name: "",
     date: new Date(),
+    id: "",
   });
   const [showDate, setShowDate] = useState(false);
   const [isLoading, setLoading] = useState(false);
-  const [closeModal, setCloseModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const oldTransaction = useLocalSearchParams() as any;
+
+  useEffect(() => {
+    if (oldTransaction?.id) {
+      setTransaction({
+        type: oldTransaction.type,
+        amount: Number(oldTransaction.amount),
+        category_name: oldTransaction.category,
+        date: oldTransaction.date ? new Date(oldTransaction.date) : new Date(),
+        description: oldTransaction.description,
+      });
+      if (oldTransaction.wallet_id) {
+        const walletId = String(oldTransaction.wallet_id);
+        setSelectedId(walletId);
+      }
+    }
+  }, [oldTransaction.id, oldTransaction.wallet_id]);
 
   const onDateChange = (event: any, selectDate: any) => {
     const currentDate = selectDate || transaction.date;
@@ -73,113 +81,118 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
     setShowDate(false);
   };
 
-  const addTransaction = async () => {
-    try {
-      setLoading(true);
 
-      const reponse = await fetch(
-        `http://192.168.100.7:4000/add_transaction/${user_Id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            type: transaction.type,
-            amount: transaction.amount,
-            description: transaction.description || null,
-            date: transaction.date.toISOString().slice(0, 10),
-            category_name: transaction.category_name,
-          }),
-        },
-      );
+const handleAddOrUpdateTransaction = async () => {
+  if (!transaction.type || !transaction.amount || !selectedId) {
+    Alert.alert("Please fill the required fields");
+    return;
+  }
 
-      const result = await reponse.json();
+  const isUpdate = !!oldTransaction?.id;
 
-      if (result.success) {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Transaction Added",
-          autoHide: true,
-        });
+  try {
+    setLoading(true);
 
-        // setTransactions(prev => [transaction, ...prev] )
-        const transResponse = await fetch(
-          `http://192.168.100.7:4000/getTransactions/${user_Id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
+    const endpoint = isUpdate
+      ? `${app_url}/updateTransaction/${oldTransaction.id}/${user_Id}`
+      : `${app_url}/add_transaction/${user_Id}`;
+
+    const response = await fetch(endpoint, {
+      method: isUpdate ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: transaction.type,
+        wallet_id: selectedId,
+        amount: transaction.amount,
+        description: transaction.description || null,
+        date: transaction.date.toISOString().slice(0, 10),
+        category_name: transaction.category_name,
+      }),
+    });
+
+    const result = await response.json();
+    console.log("API result:", JSON.stringify(result)); // 👈 check this
+
+    if (result.success) {
+      if (isUpdate) {
+        const updatedItem = {
+          id: Number(oldTransaction.id),       
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description,
+          category_name: transaction.category_name,
+          date: transaction.date.toISOString().slice(0, 10),
+          wallet_id: selectedId,
+          ...(result.transaction ?? {}),        
+        };
+
+        setTransactions((prev: any) =>
+          prev.map((t: any) =>
+            Number(t.id) === Number(oldTransaction.id) ? updatedItem : t 
+          )
         );
-        const transResult = await transResponse.json();
-        if (transResult.success) {
-          setTransactions(transResult.transaction);
+        const oldAmount = Number(oldTransaction.amount);
+        const newAmount = Number(transaction.amount);
+        const diff = newAmount - oldAmount;
+
+        if (transaction.type === "expense") {
+          setTotalBalance((prev: any) => prev - diff);
+          setTotalExpense((prev: any) => prev + diff);
+        } else {
+          setTotalBalance((prev: any) => prev + diff);
+          setTotalIncome((prev: any) => prev + diff);
         }
 
-        await setTransaction({
-          type: "Expense",
-          amount: 0,
-          description: "",
-          category_name: "",
-          date: new Date(),
-        });
-
-        close();
-
-        const response = await fetch(
-          `http://192.168.100.7:4000/balance/${user_Id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        const result = await response.json();
-
-        if (result.success) {
-          const timeout = setTimeout(() => {
-            setTotalBalance(Number(result.total_balance));
-            setTotalIncome(Number(result.total_income));
-            setTotalExpense(Number(result.total_expense));
-          }, 2000);
-
-          return () => clearTimeout(timeout)
-        }
       } else {
-        Toast.show({
-          type: "error",
-          text1: "Failed to Add Transaction",
-          text2: "There was an error adding the transaction. Please try again.",
-          visibilityTime: 3000,
-          autoHide: true,
-        });
+        setTransactions((prev: any) => [result.transaction, ...prev]);
+
+        if (transaction.type === "expense") {
+          setTotalBalance((prev: any) => prev - Number(transaction.amount));
+          setTotalExpense((prev: any) => prev + Number(transaction.amount));
+        } else {
+          setTotalBalance((prev: any) => prev + Number(transaction.amount));
+          setTotalIncome((prev: any) => prev + Number(transaction.amount));
+        }
       }
-    } catch (error) {
-      console.log("Error during adding transaction", error);
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `Transaction ${isUpdate ? "Updated" : "Added"}`,
+        autoHide: true,
+      });
+
+      router.replace('/(tabs)/Home');
+
+    } else {
       Toast.show({
         type: "error",
-        text1: "Submission Error",
-        text2:
-          "Something went wrong while submitting the form. Please try again later.",
+        text1: "Failed",
+        text2: result.message || "Something went wrong.",
         visibilityTime: 3000,
         autoHide: true,
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.log("Error:", error);
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: "Something went wrong. Please try again.",
+      visibilityTime: 3000,
+      autoHide: true,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View
       style={{
         flex: 1,
         backgroundColor: colors.neutral700,
-        borderRadius: 20,
+        // borderRadius: 20,
         paddingBottom: 20,
         paddingHorizontal: 10,
       }}
@@ -194,7 +207,7 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
         }}
       >
         <TouchableOpacity
-          onPress={close}
+          onPress={() => router.back()}
           style={{
             padding: 6,
             backgroundColor: colors.neutral500,
@@ -213,7 +226,7 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
           fontWeight={700}
           size={20}
         >
-          Add Transaction
+          {oldTransaction?.id ? "Update Transaction" : "Add Transaction"}
         </Typo>
       </View>
 
@@ -249,11 +262,11 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
             />
           </View>
 
-          {/* Wallet Tye */}
+          {/* {All Wallets} */}
 
-          {/* <View style={{ gap: 10 }}>
+          <View style={{ gap: 10 }}>
             <Typo fontWeight={500} size={16}>
-              Wallet Type
+              Wallets
             </Typo>
             <Dropdown
               style={styles.dropdown}
@@ -264,43 +277,41 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
               activeColor="transparent"
               itemTextStyle={{ color: colors.neutral400 }}
               closeModalWhenSelectedItem={true}
-              data={WalletType}
+              data={wallet.map((w) => ({
+                label: `${w.wallet_name} $(${w.amount})`,
+                value: String(w.id),
+                image: w.wallet_image,
+              }))}
               maxHeight={200}
               labelField="label"
               valueField="value"
-              value={isWalletType}
+              value={selectedId}
               onChange={(item) => {
-                setWalletType(item.value);
+                setSelectedId(item.value);
+                setTransaction({ ...transaction, id: item.value });
               }}
-              renderItem={(item) => {
-                const isSelected = item.value === isWalletType;
-                return (
-                  <View
-                    style={{
-                      marginHorizontal: 8, // spacing from dropdown edges
-                      marginVertical: 4, // spacing between rows
-                      padding: 10,
-                      borderRadius: radius._17,
-                      backgroundColor: isSelected
-                        ? colors.neutral700
-                        : "transparent",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: isSelected
-                          ? colors.neutral100
-                          : colors.neutral400,
-                        fontWeight: isSelected ? "bold" : "normal",
-                      }}
-                    >
+              renderItem={(item) => (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 10,
+                    gap: 10,
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.image }}
+                    style={{ width: 35, height: 35, borderRadius: 8 }}
+                  />
+                  <View>
+                    <Typo size={14} color={colors.white}>
                       {item.label}
-                    </Text>
+                    </Typo>
                   </View>
-                );
-              }}
+                </View>
+              )}
             />
-          </View> */}
+          </View>
 
           {/* Expense category */}
 
@@ -318,45 +329,34 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
                 activeColor="transparent"
                 itemTextStyle={{ color: colors.neutral400 }}
                 closeModalWhenSelectedItem={true}
-                data={ExpenseType}
+                data={Object.values(expenseCategories)}
                 maxHeight={200}
                 labelField="label"
                 valueField="value"
                 value={transaction.category_name}
                 onChange={(item) => {
-                  setTransaction({
-                    ...transaction,
-                    category_name: item.value,
-                  });
+                  setTransaction({ ...transaction, category_name: item.value });
                 }}
-
-                // renderItem={(item) => {
-                //   const isSelected = item.value === isExpenseType;
-                //   return (
-                //     <View
-                //       style={{
-                //         marginHorizontal: 8, // spacing from dropdown edges
-                //         marginVertical: 4, // spacing between rows
-                //         padding: 10,
-                //         borderRadius: radius._17,
-                //         backgroundColor: isSelected
-                //           ? colors.neutral700
-                //           : "transparent",
-                //       }}
-                //     >
-                //       <Text
-                //         style={{
-                //           color: isSelected
-                //             ? colors.neutral100
-                //             : colors.neutral400,
-                //           fontWeight: isSelected ? "bold" : "normal",
-                //         }}
-                //       >
-                //         {item.label}
-                //       </Text>
-                //     </View>
-                //   );
-                // }}
+                renderItem={(item) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 10,
+                      gap: 10,
+                    }}
+                  >
+                    <Image
+                      source={{ uri: item.image }}
+                      style={{ width: 35, height: 35, borderRadius: 8 }}
+                    />
+                    <View>
+                      <Typo size={14} color={colors.white}>
+                        {item.label}
+                      </Typo>
+                    </View>
+                  </View>
+                )}
               />
             </View>
           )}
@@ -374,7 +374,7 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
                 onPress={() => setShowDate(true)}
               >
                 <Typo size={16}>
-                  {(transaction.date as Date).toDateString()}
+                  {new Date(transaction.date).toDateString()}
                 </Typo>
               </Pressable>
             )}
@@ -440,11 +440,21 @@ const AddTransaction: React.FC<Form> = ({ close }) => {
 
       {/* Button */}
 
-      <Button onPress={addTransaction} loading={isLoading}>
-        <Typo size={20} color={colors.black} fontWeight={"500"}>
-          Add Transaction
-        </Typo>
-      </Button>
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <Button
+          onPress={handleAddOrUpdateTransaction}
+          loading={isLoading}
+          style={{ backgroundColor: colors.primary }}
+        >
+          <Typo size={20} color={colors.black} fontWeight={"500"}>
+            {oldTransaction?.id ? "Update Transaction" : "Add Transaction"}
+          </Typo>
+        </Button>
+      )}
+
+      <Toast />
     </View>
   );
 };
