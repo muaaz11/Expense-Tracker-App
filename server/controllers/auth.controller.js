@@ -100,26 +100,4 @@ const login = async (req, res) => {
       .json({ success: false, message: "Internal Server error" });
   }
 };
-
-// const refreshToken = async (req, res) => {
-//     const token = req.headers.authorization?.split(" ")[1]
-
-//     if(!token){
-//         return res
-//         .status(401)
-//         .json({message: "Token required"})
-//     }
-
-//     try {
-//         const decoded =jwt.verify(token, JWT_SECRET_KEY)
-
-//         const newToken = jwt.sign({
-//             user: decoded.id
-
-//         })
-//     } catch (error) {
-
-//     }
-// }
-
 export { register, login };

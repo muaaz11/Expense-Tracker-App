@@ -48,34 +48,34 @@ export default function Profile() {
       routeName: "/(modals)/profileModal",
     },
 
-    // {
-    //   title: "Settings",
-    //   icon: (
-    //     <Icons.GearIcon size={25} weight="fill" color={colors.neutral100} />
-    //   ),
-    //   bgColor: "#00be4fff",
-    //   routeName: "/(modals)/profileModal",
-    // },
+    {
+      title: "Settings",
+      icon: (
+        <Icons.GearIcon size={25} weight="fill" color={colors.neutral100} />
+      ),
+      bgColor: "#00be4fff",
+      routeName: "/(modals)/profileModal",
+    },
 
-    // {
-    //   title: "Privacy Policy",
-    //   icon: <Icons.LockIcon size={25} weight="fill" color={colors.neutral100} />,
-    //   bgColor: "#02ebf3ff",
-    //   routeName: "/(modals)/profileModal",
-    // },
+    {
+      title: "Privacy Policy",
+      icon: <Icons.LockIcon size={25} weight="fill" color={colors.neutral100} />,
+      bgColor: "#02ebf3ff",
+      routeName: "/(modals)/profileModal",
+    },
 
-    // {
-    //   title: "Logout",
-    //   icon: (
-    //     <Icons.SignOutIcon
-    //       size={25}
-    //       weight="fill"
-    //       color={colors.neutral100}
-    //     />
-    //   ),
-    //   bgColor: "#fb5f5fff",
-    //   // routeName: handleLogout()
-    // },
+    {
+      title: "Logout",
+      icon: (
+        <Icons.SignOutIcon
+          size={25}
+          weight="fill"
+          color={colors.neutral100}
+        />
+      ),
+      bgColor: "#fb5f5fff",
+      // routeName: handleLogout()
+    },
   ];
 
     const handleLogout = async() => {
@@ -95,7 +95,7 @@ export default function Profile() {
 
       setLoading(false);
     } catch (error) {
-      console.log("error in loggingout customer");
+      console.log("error in logging out customer");
       Toast.show({
         type: 'error',
         text1: 'Server error'

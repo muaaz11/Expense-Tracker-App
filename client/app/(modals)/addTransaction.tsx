@@ -27,6 +27,7 @@ import Loading from "@/components/Loading";
 import { Image } from "expo-image";
 import { expenseCategories } from "@/constant/data";
 import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
+import * as Icon from "phosphor-react-native";
 import { app_url } from "@/url";
 
 const AddTransaction: React.FC = () => {
@@ -55,6 +56,7 @@ const AddTransaction: React.FC = () => {
   });
   const [showDate, setShowDate] = useState(false);
   const [isLoading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const oldTransaction = useLocalSearchParams() as any;
@@ -65,7 +67,7 @@ const AddTransaction: React.FC = () => {
         type: oldTransaction.type,
         amount: Number(oldTransaction.amount),
         category_name: oldTransaction.category,
-        date: oldTransaction.date ? new Date(oldTransaction.date) : new Date(),
+        date: oldTransaction.date,
         description: oldTransaction.description,
       });
       if (oldTransaction.wallet_id) {
@@ -81,111 +83,143 @@ const AddTransaction: React.FC = () => {
     setShowDate(false);
   };
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true)
+      const response = await fetch(
+        `${app_url}/deleteTransaction/${oldTransaction.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
-const handleAddOrUpdateTransaction = async () => {
-  if (!transaction.type || !transaction.amount || !selectedId) {
-    Alert.alert("Please fill the required fields");
-    return;
-  }
+      const result = await response.json();
 
-  const isUpdate = !!oldTransaction?.id;
-
-  try {
-    setLoading(true);
-
-    const endpoint = isUpdate
-      ? `${app_url}/updateTransaction/${oldTransaction.id}/${user_Id}`
-      : `${app_url}/add_transaction/${user_Id}`;
-
-    const response = await fetch(endpoint, {
-      method: isUpdate ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: transaction.type,
-        wallet_id: selectedId,
-        amount: transaction.amount,
-        description: transaction.description || null,
-        date: transaction.date.toISOString().slice(0, 10),
-        category_name: transaction.category_name,
-      }),
-    });
-
-    const result = await response.json();
-    console.log("API result:", JSON.stringify(result)); // 👈 check this
-
-    if (result.success) {
-      if (isUpdate) {
-        const updatedItem = {
-          id: Number(oldTransaction.id),       
-          type: transaction.type,
-          amount: transaction.amount,
-          description: transaction.description,
-          category_name: transaction.category_name,
-          date: transaction.date.toISOString().slice(0, 10),
-          wallet_id: selectedId,
-          ...(result.transaction ?? {}),        
-        };
-
-        setTransactions((prev: any) =>
-          prev.map((t: any) =>
-            Number(t.id) === Number(oldTransaction.id) ? updatedItem : t 
-          )
+      if (result.success) {
+        const updateTransactions = transactions.filter(
+          (prev) => prev.id !== oldTransaction.id,
         );
-        const oldAmount = Number(oldTransaction.amount);
-        const newAmount = Number(transaction.amount);
-        const diff = newAmount - oldAmount;
 
-        if (transaction.type === "expense") {
-          setTotalBalance((prev: any) => prev - diff);
-          setTotalExpense((prev: any) => prev + diff);
-        } else {
-          setTotalBalance((prev: any) => prev + diff);
-          setTotalIncome((prev: any) => prev + diff);
-        }
-
-      } else {
-        setTransactions((prev: any) => [result.transaction, ...prev]);
-
-        if (transaction.type === "expense") {
-          setTotalBalance((prev: any) => prev - Number(transaction.amount));
-          setTotalExpense((prev: any) => prev + Number(transaction.amount));
-        } else {
-          setTotalBalance((prev: any) => prev + Number(transaction.amount));
-          setTotalIncome((prev: any) => prev + Number(transaction.amount));
-        }
+        setTransactions(updateTransactions);
+        router.navigate("/(tabs)/Home");
+        setIsDeleting(false)
       }
+    } catch (error) {
+      console.log("error deleting wallet", error);
+      setIsDeleting(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: `Transaction ${isUpdate ? "Updated" : "Added"}`,
-        autoHide: true,
+  const handleAddOrUpdateTransaction = async () => {
+    if (!transaction.type || !transaction.amount || !selectedId) {
+      Alert.alert("Please fill the required fields");
+      return;
+    }
+
+    const isUpdate = !!oldTransaction?.id;
+
+    try {
+      setLoading(true);
+
+      const endpoint = isUpdate
+        ? `${app_url}/updateTransaction/${oldTransaction.id}/${user_Id}`
+        : `${app_url}/add_transaction/${user_Id}`;
+
+      const response = await fetch(endpoint, {
+        method: isUpdate ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: transaction.type,
+          wallet_id: selectedId,
+          amount: transaction.amount,
+          description: transaction.description || null,
+          date: transaction.date,
+          category_name: transaction.category_name,
+        }),
       });
 
-      router.replace('/(tabs)/Home');
+      const result = await response.json();
 
-    } else {
+      if (result.success) {
+        if (isUpdate) {
+          console.log("update transaction");
+          const updatedItem = {
+            id: Number(oldTransaction.id),
+            type: transaction.type,
+            amount: transaction.amount,
+            description: transaction.description,
+            category_name: transaction.category_name,
+            date: transaction.date,
+            wallet_id: selectedId,
+            ...(result.transaction ?? {}),
+          };
+
+          console.log(updatedItem);
+
+          setTransactions((prev: any) =>
+            prev.map((t: any) =>
+              Number(t.id) === Number(oldTransaction.id) ? updatedItem : t,
+            ),
+          );
+          const oldAmount = Number(oldTransaction.amount);
+          const newAmount = Number(transaction.amount);
+          const diff = newAmount - oldAmount;
+
+          if (transaction.type === "expense") {
+            setTotalBalance((prev: any) => prev - diff);
+            setTotalExpense((prev: any) => prev + diff);
+          } else {
+            setTotalBalance((prev: any) => prev + diff);
+            setTotalIncome((prev: any) => prev + diff);
+          }
+        } else {
+          setTransactions((prev: any) => [result.transaction, ...prev]);
+          console.log("new transaction added");
+
+          if (transaction.type === "expense") {
+            setTotalBalance((prev: any) => prev - Number(transaction.amount));
+            setTotalExpense((prev: any) => prev + Number(transaction.amount));
+          } else {
+            setTotalBalance((prev: any) => prev + Number(transaction.amount));
+            setTotalIncome((prev: any) => prev + Number(transaction.amount));
+          }
+        }
+
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: `Transaction ${isUpdate ? "Updated" : "Added"}`,
+          autoHide: true,
+        });
+
+        router.replace("/(tabs)/Home");
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: result.message || "Something went wrong.",
+          visibilityTime: 3000,
+          autoHide: true,
+        });
+      }
+    } catch (error) {
+      console.log("Error:", error);
       Toast.show({
         type: "error",
-        text1: "Failed",
-        text2: result.message || "Something went wrong.",
+        text1: "Error",
+        text2: "Something went wrong. Please try again.",
         visibilityTime: 3000,
         autoHide: true,
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.log("Error:", error);
-    Toast.show({
-      type: "error",
-      text1: "Error",
-      text2: "Something went wrong. Please try again.",
-      visibilityTime: 3000,
-      autoHide: true,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <View
@@ -440,19 +474,35 @@ const handleAddOrUpdateTransaction = async () => {
 
       {/* Button */}
 
-      {isLoading ? (
-        <Loading />
-      ) : (
+      <View style={styles.button}>
+        {oldTransaction.id && (
+          <Button
+            style={{ backgroundColor: colors.rose, width: "15%" }}
+            onPress={handleDelete}
+          >
+            {isDeleting ? (
+              <Loading size={20} />
+            ) : (
+              <Icon.TrashIcon color={colors.neutral100} />
+            )}
+          </Button>
+        )}
         <Button
           onPress={handleAddOrUpdateTransaction}
-          loading={isLoading}
-          style={{ backgroundColor: colors.primary }}
+          style={{
+            backgroundColor: colors.primary,
+            width: oldTransaction.id ? "80%" : "100%",
+          }}
         >
-          <Typo size={20} color={colors.black} fontWeight={"500"}>
-            {oldTransaction?.id ? "Update Transaction" : "Add Transaction"}
-          </Typo>
+          {isLoading ? (
+            <Loading color={colors.neutral800} />
+          ) : (
+            <Typo color={colors.neutral600} fontWeight={600}>
+              {oldTransaction.id ? "Update Wallet" : "Add Wallet"}
+            </Typo>
+          )}
         </Button>
-      )}
+      </View>
 
       <Toast />
     </View>
@@ -518,5 +568,10 @@ const styles = StyleSheet.create({
     borderRadius: radius._17,
     borderCurve: "continuous",
     paddingHorizontal: spacingX._15,
+  },
+
+  button: {
+    flexDirection: "row",
+    gap: 10,
   },
 });

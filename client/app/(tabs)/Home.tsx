@@ -30,7 +30,7 @@ import * as Icons from "phosphor-react-native";
 
 
 const Home = () => {
-  const { user } = useContext(AppContext);
+  const { user, transactions } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
 
   const logout = async () => {

@@ -4,13 +4,10 @@ import { colors, radius } from "@/constant/style";
 import { scale, verticalScale } from "@/utils/stying";
 import { AppContext } from "@/context/store";
 import {useRouter } from "expo-router";
-import ActionsModal from "./Modal/ActionsModal";
 import Toast from "react-native-toast-message";
 import { expenseCategories, incomeCategory } from "@/constant/data";
 import Typo from "./Typo";
-import { Label } from "@react-navigation/elements";
 import Loading from "./Loading";
-import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
 
 const TransactionList = () => {
   const {
@@ -22,9 +19,7 @@ const TransactionList = () => {
     user_Id
   } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
-  const [openActionModal, setOpenActionModal] = useState(false);
-  const [transactionId, setTransactionId] = useState(null);
-
+  
   const router = useRouter()  
   
   const handlePress = (item) => {
@@ -42,64 +37,65 @@ const TransactionList = () => {
     })
   };
 
-  const deleteTransaction = async (id) => {
-    try {
-      setLoading(true);
+  // const deleteTransaction = async (id) => {
+  //   try {
+  //     setLoading(true);
 
-      const response = await fetch(
-        `http://192.168.100.7:4000/deleteTransaction/${transactionId}`,
-        {
-          method: "DELETE",
-        },
-      );
+  //     const response = await fetch(
+  //       `http://192.168.100.7:4000/deleteTransaction/${transactionId}`,
+  //       {
+  //         method: "DELETE",
+  //       },
+  //     );
 
-      if (response.success) {
-        Toast.show({
-          type: "success",
-          text1: "successful",
-          text2: "Transaction deleted",
-          autoHide: true,
-        });
-      }
+  //     if (response.success) {
+  //       Toast.show({
+  //         type: "success",
+  //         text1: "successful",
+  //         text2: "Transaction deleted",
+  //         autoHide: true,
+  //       });
+  //     }
 
-      const updated = transactions.filter((item) => item.id !== id);
-      setTransactions(updated);
-      setOpenActionModal(false);
+  //     const updated = transactions.filter((item) => item.id !== id);
+  //     setTransactions(updated);
+  //     setOpenActionModal(false);
 
-         const tranResponse = await fetch(
-          `http://192.168.100.7:4000/balance/${user_Id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
+  //        const tranResponse = await fetch(
+  //         `http://192.168.100.7:4000/balance/${user_Id}`,
+  //         {
+  //           method: "GET",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         },
+  //       );
 
-        const result = await tranResponse.json();
+  //       const result = await tranResponse.json();
 
-        if (result.success) {
-          const timeout = setTimeout(() => {
-            setTotalBalance(Number(result.total_balance));
-            setTotalIncome(Number(result.total_income));
-            setTotalExpense(Number(result.total_expense));
-          }, 2000);
+  //       if (result.success) {
+  //         const timeout = setTimeout(() => {
+  //           setTotalBalance(Number(result.total_balance));
+  //           setTotalIncome(Number(result.total_income));
+  //           setTotalExpense(Number(result.total_expense));
+  //         }, 2000);
 
-          return () => clearTimeout(timeout)
-        }
+  //         return () => clearTimeout(timeout)
+  //       }
 
-      setLoading(false);
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Failed to delete the transaction",
-        autoHide: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setLoading(false);
+  //   } catch (error) {
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Error",
+  //       text2: "Failed to delete the transaction",
+  //       autoHide: true,
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  
   const getCategoryInfo = (item: any) => {
     if (item.type === "income") {
       return {
@@ -115,8 +111,8 @@ const TransactionList = () => {
   };
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.loadingWrapper}>
+    <View>
+      <View>
         {loading ? (
           <Loading size={50} color={colors.green} />
         ) : (
@@ -135,7 +131,6 @@ const TransactionList = () => {
               { opacity: pressed ? 0.7 : 1 },
             ]}
           >
-            {/* Left side: Image + Type/Description */}
             <View style={styles.container2}>
               <View
                 style={[
@@ -159,7 +154,6 @@ const TransactionList = () => {
               </View>
             </View>
 
-            {/* Right side: Amount + Date */}
             <View style={{ alignItems: "center" }}>
                 <Typo
                   style={{
@@ -179,12 +173,12 @@ const TransactionList = () => {
       )}
       </View>
 
-      <ActionsModal
+      {/* <ActionsModal
         visible={openActionModal}
         closeModal={setOpenActionModal}
         id={transactionId}
         delTransaction={deleteTransaction}
-      />
+      /> */}
     </View>
   );
 };

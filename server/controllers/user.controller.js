@@ -179,7 +179,7 @@ const getTransactions = async (req, res) => {
 
   try {
     const findtransaction = await pool.query(
-      "SELECT id, type, category_name, amount, description, date, wallet_id from add_transaction where user_id = $1",
+      "SELECT id, type, category_name, amount, description, date, wallet_id from add_transaction where user_id = $1 ORDER BY date desc",
       [id],
     );
 
@@ -256,6 +256,7 @@ const deleteTransaction = async (req, res) => {
       .json({ success: true, message: "Internal Server Error" });
   }
 };
+
 const updateTransaction = async (req, res) => {
   const { type, wallet_id, description, date, amount, category_name } =
     req.body;
@@ -274,7 +275,6 @@ const updateTransaction = async (req, res) => {
     );
 
     if (walletResult.rows.length === 0) {
-      console.log(walletResult.rows);
       return res
         .status(404)
         .json({ success: false, message: "Wallet not found" });
@@ -314,9 +314,6 @@ const updateTransaction = async (req, res) => {
           id,
         ],
       );
-
-      console.log(result.rows);
-
       return res.status(201).json({
         success: true,
         message: "Expenses updated successfully",
@@ -367,6 +364,7 @@ const updateTransaction = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
 export {
   getUser,
   addTransaction,

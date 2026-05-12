@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
   searchInput: {
     width: "90%",
     color: colors.neutral100,
-    // borderWidth: 0
   },
 
   list: {
